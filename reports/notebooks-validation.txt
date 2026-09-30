@@ -1,0 +1,6 @@
+01_inventory.ipynb: schema/syntax PASS
+02_global_climatology.ipynb: schema/syntax PASS
+03_timeseries_example.ipynb: schema/syntax PASS
+01_inventory: Python cells executed PASS (official snapshots).
+02/03: not executed; no real payloads.
+Jupyter kernel launch blocked by environment socket restrictions; inventory executed directly in Python.

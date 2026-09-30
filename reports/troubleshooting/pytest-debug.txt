@@ -1,0 +1,74 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- /opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python
+cachedir: .pytest_cache
+rootdir: /workspace/scratch/108de7ce5938/cams-global-air-quality
+configfile: pyproject.toml
+testpaths: tests
+plugins: platformdirs-4.12.2
+collecting ... collected 57 items
+
+tests/test_extraction.py::test_negative_longitude PASSED
+tests/test_extraction.py::test_antimeridian PASSED
+tests/test_extraction.py::test_full_globe_bbox PASSED
+tests/test_extraction.py::test_latitude_order PASSED
+tests/test_extraction.py::test_area_mean_and_poles PASSED
+tests/test_extraction.py::test_invalid_bbox PASSED
+tests/test_http_resume.py::test_range_resume PASSED
+tests/test_http_resume.py::test_range_not_supported_restarts PASSED
+tests/test_http_resume.py::test_changed_signed_asset_restarts PASSED
+tests/test_pipeline.py::test_manifest_idempotent PASSED
+tests/test_pipeline.py::test_existing_file_never_downloaded PASSED
+tests/test_pipeline.py::test_crash_recovery PASSED
+tests/test_pipeline.py::test_incremental_inventory PASSED
+tests/test_pipeline.py::test_process_consolidate_extract PASSED
+tests/test_pipeline.py::test_consolidation_rejects_unequal_variables PASSED
+tests/test_pipeline.py::test_statistics_calendar_weighting PASSED
+tests/test_pipeline.py::test_job_identity_retained_on_timeout PASSED
+tests/test_pipeline.py::test_download_mocked_full_pipeline PASSED
+tests/test_pipeline.py::test_baseline_not_silently_truncated PASSED
+tests/test_pipeline.py::test_analysis_and_map_render PASSED
+tests/test_requests.py::test_monthly_current_schema PASSED
+tests/test_requests.py::test_model_60[co] PASSED
+tests/test_requests.py::test_model_60[no2] PASSED
+tests/test_requests.py::test_model_60[so2] PASSED
+tests/test_requests.py::test_model_60[o3] PASSED
+tests/test_requests.py::test_leap_month PASSED
+tests/test_requests.py::test_no_guessed_last_year PASSED
+tests/test_requests.py::test_partial_subdaily_month_excluded PASSED
+tests/test_requests.py::test_unknown_variable_rejected PASSED
+tests/test_requests.py::test_period_limits PASSED
+tests/test_requests.py::test_request_identity PASSED
+tests/test_requests.py::test_incomplete_time_constraints_rejected PASSED
+tests/test_units.py::test_pm_conversion PASSED
+tests/test_units.py::test_gas_identity PASSED
+tests/test_units.py::test_units_must_match PASSED
+tests/test_units.py::test_density_and_gas PASSED
+tests/test_units.py::test_no_monthly_density_conversion PASSED
+tests/test_units.py::test_alignment_and_negative PASSED
+tests/test_validation.py::test_valid_file PASSED
+tests/test_validation.py::test_qc_failures[units] PASSED
+tests/test_validation.py::test_qc_failures[inf] PASSED
+tests/test_validation.py::test_qc_failures[nan] PASSED
+tests/test_validation.py::test_qc_failures[duplicate] PASSED
+tests/test_validation.py::test_qc_failures[month] PASSED
+tests/test_validation.py::test_qc_failures[grid] PASSED
+tests/test_validation.py::test_qc_failures[coordinates] PASSED
+tests/test_validation.py::test_corrupt PASSED
+tests/test_validation.py::test_negative_warned_not_clipped PASSED
+tests/test_validation.py::test_wrong_gas_level[1] PASSED
+tests/test_validation.py::test_wrong_gas_level[59] PASSED
+tests/test_validation.py::test_wrong_gas_level[137] PASSED
+tests/test_validation.py::test_wrong_gas_level[None] PASSED
+tests/test_validation.py::test_correct_gas_level PASSED
+tests/test_validation.py::test_three_hour_gap PASSED
+tests/test_validation.py::test_zip_safe PASSED
+tests/test_validation.py::test_grib_real_codec PASSED
+tests/test_validation.py::test_shifted_global_grid PASSED
+
+=============================== warnings summary ===============================
+tests/test_pipeline.py::test_manifest_idempotent
+  <frozen importlib._bootstrap>:488: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 57 passed, 1 warning in 7.81s =========================
+double free or corruption (!prev)

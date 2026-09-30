@@ -1,0 +1,67 @@
+pollutants:
+  pm25:
+    cams_variable: particulate_matter_2.5um
+    aliases: [pm2p5, pm25, particulate_matter_2.5um]
+    param_id: 210073
+    long_name: Particulate matter with diameter less than 2.5 micrometres
+    level_type: surface
+    level: null
+    original_units: kg m-3
+    desired_units: ug m-3
+    conversion: mass_concentration
+    assumptions: CAMS diagnostic; grid-cell estimate, not a monitoring station.
+  pm10:
+    cams_variable: particulate_matter_10um
+    aliases: [pm10, particulate_matter_10um]
+    param_id: 210074
+    long_name: Particulate matter with diameter less than 10 micrometres
+    level_type: surface
+    level: null
+    original_units: kg m-3
+    desired_units: ug m-3
+    conversion: mass_concentration
+    assumptions: CAMS diagnostic; grid-cell estimate, not a monitoring station.
+  co:
+    cams_variable: carbon_monoxide
+    aliases: [co, carbon_monoxide]
+    param_id: 210123
+    long_name: Carbon monoxide mass mixing ratio
+    level_type: model
+    level: 60
+    original_units: kg kg-1
+    desired_units: kg kg-1
+    conversion: identity
+    assumptions: Lowest EAC4 hybrid model level; not a fixed-height surface measurement.
+  no2:
+    cams_variable: nitrogen_dioxide
+    aliases: [no2, nitrogen_dioxide]
+    param_id: 210121
+    long_name: Nitrogen dioxide mass mixing ratio
+    level_type: model
+    level: 60
+    original_units: kg kg-1
+    desired_units: kg kg-1
+    conversion: identity
+    assumptions: Lowest EAC4 hybrid model level; monthly gas concentration conversion disabled.
+  so2:
+    cams_variable: sulphur_dioxide
+    aliases: [so2, sulphur_dioxide]
+    param_id: 210122
+    long_name: Sulphur dioxide mass mixing ratio
+    level_type: model
+    level: 60
+    original_units: kg kg-1
+    desired_units: kg kg-1
+    conversion: identity
+    assumptions: Lowest EAC4 hybrid model level; not total column sulphur dioxide.
+  o3:
+    cams_variable: ozone
+    aliases: [go3, o3, ozone]
+    param_id: 210203
+    long_name: Ozone mass mixing ratio
+    level_type: model
+    level: 60
+    original_units: kg kg-1
+    desired_units: kg kg-1
+    conversion: identity
+    assumptions: Lowest EAC4 hybrid model level; not total column ozone.

@@ -1,0 +1,118 @@
+{
+  "type": "Collection",
+  "id": "cams-global-atmospheric-composition-forecasts",
+  "stac_version": "1.1.0",
+  "title": "CAMS global atmospheric composition forecasts",
+  "description": "CAMS produces global forecasts for atmospheric composition twice a day. The forecasts consist of more than 50 chemical species (e.g. ozone, nitrogen dioxide, carbon monoxide) and seven different types of aerosol (desert dust, sea salt, organic matter, black carbon, sulphate, nitrate and ammonium aerosol). In addition, several meteorological variables are available as well.\nThe initial conditions of each forecast are obtained by combining a previous forecast with current satellite observations through a process called data assimilation. This best estimate of the state of the atmosphere at the initial forecast time step, called the analysis, provides a globally complete and consistent dataset allowing for estimates at locations where observation data coverage is low or for atmospheric pollutants for which no direct observations are available.\nThe forecast itself uses a model of the atmosphere based on the laws of physics and chemistry to determine the evolution of the concentrations of all species over time for the next five days. Apart from the required initial state, it also uses inventory-based or observation-based emission estimates as a boundary condition at the surface.\nThe CAMS global forecasting system is upgraded about once a year resulting in technical and scientific changes. The horizontal or vertical resolution can change, new species can be added, and more generally the accuracy of the forecasts can be improved. Details of these system changes can be found in the documentation. Users looking for a more consistent long-term data set should consider using the CAMS Global Reanalysis instead, which is available through the ADS and spans the period from 2003 onwards.",
+  "summaries": {},
+  "providers": [
+    {
+      "name": "ECMWF"
+    }
+  ],
+  "keywords": [
+    "Temporal coverage: Past",
+    "Variable domain: Atmosphere (composition)",
+    "Parameter family: Aerosol",
+    "Parameter family: Reactive gas",
+    "Spatial coverage: Global",
+    "Variable domain: Atmosphere (meteorology)",
+    "Product type: Analysis",
+    "Temporal coverage: Present",
+    "Temporal coverage: Future",
+    "Product type: Forecast"
+  ],
+  "license": "CC-BY-4.0",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          -180.0,
+          -90.0,
+          180.0,
+          90.0
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "2015-01-01T00:00:00+00:00",
+          "2026-09-29T00:00:00+00:00"
+        ]
+      ]
+    }
+  },
+  "links": [
+    {
+      "rel": "self",
+      "type": "application/json",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/collections/cams-global-atmospheric-composition-forecasts"
+    },
+    {
+      "rel": "parent",
+      "type": "application/json",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/"
+    },
+    {
+      "rel": "root",
+      "type": "application/json",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/"
+    },
+    {
+      "rel": "license",
+      "href": "https://spdx.org/licenses/CC-BY-4.0",
+      "title": "CC-BY licence",
+      "rev": 1,
+      "id": "cc-by"
+    },
+    {
+      "rel": "form",
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-atmospheric-composition-forecasts/form_4df05f28440533084a70b0b4aa1232f9c3350e8aa03f8e32a9d214c7dee2afd8.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "constraints",
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-atmospheric-composition-forecasts/constraints_15c6b093249bf4b740028ba1e0ce7d20d8785333f35506effc13c67412ec03ef.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "retrieve",
+      "href": "https://ads.atmosphere.copernicus.eu/api/retrieve/v1/processes/cams-global-atmospheric-composition-forecasts",
+      "type": "application/json"
+    },
+    {
+      "rel": "costing_api",
+      "href": "https://ads.atmosphere.copernicus.eu/api/retrieve/v1/processes/cams-global-atmospheric-composition-forecasts/costing",
+      "type": "application/json"
+    },
+    {
+      "rel": "layout",
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-atmospheric-composition-forecasts/layout_78182955184bf96d2322eb5363d50c940d2fcc5cce7b040aa811f1e66bccddfb.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "messages",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/collections/cams-global-atmospheric-composition-forecasts/messages",
+      "title": "All active messages on CAMS global atmospheric composition forecasts"
+    }
+  ],
+  "assets": {
+    "thumbnail": {
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-atmospheric-composition-forecasts/overview_a484dee4988156df196a92b874b23a6d2686921df6b17c528d1a171cb51d0240.png",
+      "type": "image/jpg",
+      "roles": [
+        "thumbnail"
+      ]
+    }
+  },
+  "published": "2021-03-25T00:00:00Z",
+  "updated": "2021-03-25T00:00:00Z",
+  "sci:doi": "10.24381/04a0b097",
+  "cads:disabled_reason": null,
+  "cads:sanity_check": {
+    "status": "available",
+    "timestamp": "2026-09-29T22:19:25.059157+00:00"
+  },
+  "cads:fair": 88
+}

@@ -1,0 +1,8 @@
+{
+  "real_payload_count": 0,
+  "status": "NOT_RUN",
+  "reason": "ADS key absent: no payload to inspect",
+  "synthetic_test_report": "pytest-final.txt",
+  "tests_passed": 61,
+  "test_process_exit_code": 0
+}

@@ -1,0 +1,47 @@
+src/cams_air_quality/__main__.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/analysis.py:2:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/catalog.py:5:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/catalog.py:41:30: UP017 [*] Use `datetime.UTC` alias
+src/cams_air_quality/cli.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/cli.py:53:16: BLE001 Do not catch blind exception: `Exception`
+src/cams_air_quality/cli.py:156:13: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/cli.py:170:12: BLE001 Do not catch blind exception: `Exception`
+src/cams_air_quality/config.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/downloader.py:2:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/downloader.py:65:15: UP024 [*] Replace aliased errors with `OSError`
+src/cams_air_quality/downloader.py:132:20: BLE001 Do not catch blind exception: `Exception`
+src/cams_air_quality/extraction.py:2:18: F401 [*] `pandas` imported but unused
+src/cams_air_quality/extraction.py:80:5: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/inventory.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/maps.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/maps.py:4:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/metadata.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/metadata.py:1:21: F401 [*] `pathlib.Path` imported but unused
+src/cams_air_quality/processing.py:2:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/processing.py:6:8: F401 [*] `shutil` imported but unused
+src/cams_air_quality/requests.py:2:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/statistics.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/storage.py:2:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/storage.py:10:25: UP017 [*] Use `datetime.UTC` alias
+src/cams_air_quality/validation.py:2:1: I001 [*] Import block is un-sorted or un-formatted
+src/cams_air_quality/validation.py:4:8: F401 [*] `hashlib` imported but unused
+src/cams_air_quality/validation.py:25:13: SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+src/cams_air_quality/validation.py:183:12: BLE001 Do not catch blind exception: `Exception`
+tests/conftest.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests/conftest.py:2:8: F401 [*] `copy` imported but unused
+tests/test_extraction.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_extraction.py:1:17: F401 [*] `numpy` imported but unused
+tests/test_http_resume.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_pipeline.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_pipeline.py:2:8: F401 [*] `json` imported but unused
+tests/test_pipeline.py:57:58: F841 Local variable `m` is assigned to but never used
+tests/test_pipeline.py:61:5: F841 Local variable `previous` is assigned to but never used
+tests/test_pipeline.py:68:5: I001 [*] Import block is un-sorted or un-formatted
+tests/test_pipeline.py:83:5: I001 [*] Import block is un-sorted or un-formatted
+tests/test_requests.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_units.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_units.py:1:17: F401 [*] `numpy` imported but unused
+tests/test_validation.py:1:1: I001 [*] Import block is un-sorted or un-formatted
+tests/test_validation.py:6:65: F401 [*] `cams_air_quality.validation.open_raw` imported but unused
+Found 45 errors.
+[*] 38 fixable with the `--fix` option (2 hidden fixes can be enabled with the `--unsafe-fixes` option).

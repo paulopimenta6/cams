@@ -1,0 +1,120 @@
+{
+  "type": "Collection",
+  "id": "cams-global-reanalysis-eac4-monthly",
+  "stac_version": "1.1.0",
+  "title": "CAMS global reanalysis (EAC4) monthly averaged fields",
+  "description": "EAC4 (ECMWF Atmospheric Composition Reanalysis 4) is the fourth generation ECMWF global reanalysis of atmospheric composition. Reanalysis combines model data with observations from across the world into a globally complete and consistent dataset using a model of the atmosphere based on the laws of physics and chemistry. This principle, called data assimilation, is based on the method used by numerical weather prediction centres and air quality forecasting centres, where every so many hours (12 hours at ECMWF) a previous forecast is combined with newly available observations in an optimal way to produce a new best estimate of the state of the atmosphere, called analysis, from which an updated, improved forecast is issued. Reanalysis works in the same way to allow for the provision of a dataset spanning back more than a decade. Reanalysis does not have the constraint of issuing timely forecasts, so there is more time to collect observations, and when going further back in time, to allow for the ingestion of improved versions of the original observations, which all benefit the quality of the reanalysis product.\nThe assimilation system is able to estimate biases between observations and to sift good-quality data from poor data. The atmosphere model allows for estimates at locations where data coverage is low or for atmospheric pollutants for which no direct observations are available. The provision of estimates at each grid point around the globe for each regular output time, over a long period, always using the same format, makes reanalysis a very convenient and popular dataset to work with.\nThe observing system has changed drastically over time, and although the assimilation system can resolve data holes, the initially much sparser networks will lead to less accurate estimates. For this reason, EAC4 is only available from 2003 onwards.\nAlthough the analysis procedure considers chunks of data in a window of 12 hours in one go, EAC4 provides estimates every 3 hours, worldwide. This is made possible by the 4D-Var assimilation method, which takes account of the exact timing of the observations and model evolution within the assimilation window.",
+  "summaries": {},
+  "providers": [
+    {
+      "name": "ECMWF"
+    }
+  ],
+  "keywords": [
+    "Product type: Reanalysis",
+    "Temporal coverage: Past",
+    "Variable domain: Atmosphere (composition)",
+    "Parameter family: Aerosol",
+    "Parameter family: Reactive gas",
+    "Spatial coverage: Global",
+    "Variable domain: Atmosphere (meteorology)"
+  ],
+  "license": "CC-BY-4.0",
+  "extent": {
+    "spatial": {
+      "bbox": [
+        [
+          -180.0,
+          -90.0,
+          180.0,
+          90.0
+        ]
+      ]
+    },
+    "temporal": {
+      "interval": [
+        [
+          "2003-01-01T00:00:00+00:00",
+          "2025-12-31T00:00:00+00:00"
+        ]
+      ]
+    }
+  },
+  "links": [
+    {
+      "rel": "self",
+      "type": "application/json",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/collections/cams-global-reanalysis-eac4-monthly"
+    },
+    {
+      "rel": "parent",
+      "type": "application/json",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/"
+    },
+    {
+      "rel": "root",
+      "type": "application/json",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/"
+    },
+    {
+      "rel": "license",
+      "href": "https://spdx.org/licenses/CC-BY-4.0",
+      "title": "CC-BY licence",
+      "rev": 1,
+      "id": "cc-by"
+    },
+    {
+      "rel": "form",
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-reanalysis-eac4-monthly/form_b7601073344a5891efa474640caf35c27470b9735296090ccfb96fcf9ba5d3dd.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "constraints",
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-reanalysis-eac4-monthly/constraints_355b4cb4e5a0d5fb1693e1e986c78bebd30646cd9116510e40f791406b43709c.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "retrieve",
+      "href": "https://ads.atmosphere.copernicus.eu/api/retrieve/v1/processes/cams-global-reanalysis-eac4-monthly",
+      "type": "application/json"
+    },
+    {
+      "rel": "costing_api",
+      "href": "https://ads.atmosphere.copernicus.eu/api/retrieve/v1/processes/cams-global-reanalysis-eac4-monthly/costing",
+      "type": "application/json"
+    },
+    {
+      "rel": "layout",
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-reanalysis-eac4-monthly/layout_b73322b1bb54de34225f33a3408396b46eae8f1966b0c19a0d1d2a89dd2b3595.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "related",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/collections/cams-global-reanalysis-eac4",
+      "title": "CAMS global reanalysis (EAC4)"
+    },
+    {
+      "rel": "messages",
+      "href": "https://ads.atmosphere.copernicus.eu/api/catalogue/v1/collections/cams-global-reanalysis-eac4-monthly/messages",
+      "title": "All active messages on CAMS global reanalysis (EAC4) monthly averaged fields"
+    }
+  ],
+  "assets": {
+    "thumbnail": {
+      "href": "https://object-store.os-api.cci2.ecmwf.int:443/cci2-prod-catalogue/resources/cams-global-reanalysis-eac4-monthly/overview_e26d2a815d3e6499bc8d18623930c253deb87757ca8df91fa99e939137d38a46.png",
+      "type": "image/jpg",
+      "roles": [
+        "thumbnail"
+      ]
+    }
+  },
+  "published": "2020-02-06T00:00:00Z",
+  "updated": "2020-02-06T00:00:00Z",
+  "sci:doi": "10.24381/fd75fff2",
+  "cads:disabled_reason": null,
+  "cads:sanity_check": {
+    "status": "available",
+    "timestamp": "2026-09-29T22:19:38.579568+00:00"
+  },
+  "cads:fair": 88
+}

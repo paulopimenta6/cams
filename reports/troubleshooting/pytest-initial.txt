@@ -1,0 +1,50 @@
+....................................................F                    [100%]
+=================================== FAILURES ===================================
+_____________________________ test_grib_real_codec _____________________________
+
+cfg = {'project': 'CAMS Global Air Quality Historical Database', 'root': '/tmp/pytest-of-root/pytest-1/test_grib_real_codec0...test-1/test_grib_real_codec0/data', 'metadata_dir': '/tmp/pytest-of-root/pytest-1/test_grib_real_codec0/metadata', ...}
+snap = {'collection': {'type': 'Collection', 'id': 'cams-global-reanalysis-eac4-monthly', 'stac_version': '1.1.0', 'title': '... ['01', '02', '03', '04', '05', '06', ...], 'time': ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', ...], ...}]}
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-1/test_grib_real_codec0')
+
+    def test_grib_real_codec(cfg,snap,tmp_path):
+        # Generated locally using ecCodes sample, explicitly synthetic (not an ADS download).
+        import eccodes as ec
+        h=ec.codes_grib_new_from_samples('regular_ll_sfc_grib1')
+        for k,v in {'Ni':4,'Nj':3,'latitudeOfFirstGridPointInDegrees':90.,
+                    'latitudeOfLastGridPointInDegrees':-90.,'longitudeOfFirstGridPointInDegrees':0.,
+                    'longitudeOfLastGridPointInDegrees':270.,'iDirectionIncrementInDegrees':90.,
+                    'jDirectionIncrementInDegrees':90.,'dataDate':20030101,'dataTime':0,'paramId':210073}.items():
+>           ec.codes_set(h,k,v)
+
+tests/test_validation.py:73: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/.local/lib/python3.12/site-packages/gribapi/gribapi.py:2161: in grib_set
+    grib_set_double(msgid, key, value)
+/root/.local/lib/python3.12/site-packages/gribapi/gribapi.py:1042: in grib_set_double
+    GRIB_CHECK(lib.grib_set_double(h, key.encode(ENC), value))
+/root/.local/lib/python3.12/site-packages/gribapi/gribapi.py:232: in GRIB_CHECK
+    errors.raise_grib_error(errid)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+errid = -14
+
+    def raise_grib_error(errid):
+        """
+        Raise the GribInternalError corresponding to ``errid``.
+        """
+>       raise ERROR_MAP[errid](errid)
+E       gribapi.errors.EncodingError: Encoding invalid
+
+/root/.local/lib/python3.12/site-packages/gribapi/errors.py:386: EncodingError
+----------------------------- Captured stderr call -----------------------------
+ECCODES ERROR   :  Key "iDirectionIncrement": Trying to encode value of 90000 but the maximum allowable value is 65535 (number of bits=16)
+ECCODES ERROR   :  Hint: Consider using GRIB edition 2
+ECCODES ERROR   :  Unable to set iDirectionIncrement=90000 as long (Encoding invalid)
+=============================== warnings summary ===============================
+tests/test_pipeline.py::test_manifest_idempotent
+  <frozen importlib._bootstrap>:488: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_validation.py::test_grib_real_codec - gribapi.errors.Encodi...
+1 failed, 52 passed, 1 warning in 5.29s

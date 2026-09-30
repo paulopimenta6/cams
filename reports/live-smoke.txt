@@ -1,0 +1,19 @@
+/root/.local/lib/python3.12/site-packages/ecmwf/datastores/client.py:83: UserWarning: The API key is missing
+  warnings.warn("The API key is missing", UserWarning)
+2026-09-30 08:15:01,226 ERROR {"timestamp": "2026-09-29T23:15:01.226250+00:00", "dataset": "cams-global-reanalysis-eac4-monthly", "variable": "pm25", "year": 2003, "month": 1, "request": {"variable": ["particulate_matter_2.5um"], "data_format": "grib", "year": ["2003"], "month": ["01"], "product_type": ["monthly_mean"], "time": ["00:00"]}, "status": "failed", "elapsed_seconds": 6.089824056999987, "error": "The API key is needed to access this resource", "retry": 0}
+{
+  "batches_files": 1,
+  "fields": 1,
+  "grid_cells": 115680,
+  "float32_uncompressed_bytes": 462720,
+  "float32_uncompressed_GiB": 0.0004309415817260742,
+  "planning_disk_GiB": 0.0017237663269042969,
+  "assumptions": "global float32; raw + interim + processed + temporary (configurable); compression and metadata not measured; bbox estimate is conservative"
+}
+[
+  {
+    "key": "87db452ca5ea5329e3bedfcbec3d4bb67ba431efe403ddffb4aec3c1124ed5ec",
+    "status": "failed",
+    "error": "The API key is needed to access this resource"
+  }
+]

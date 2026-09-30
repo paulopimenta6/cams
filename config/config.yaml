@@ -1,0 +1,36 @@
+project: CAMS Global Air Quality Historical Database
+# Relative to this configuration's parent project directory.
+root: ..
+data_dir: data
+metadata_dir: metadata
+log_dir: logs
+pollutants_file: pollutants.yaml
+pollutants: [pm25, pm10, co, no2, so2, o3]
+start_date: null
+end_date: null
+api_url: https://ads.atmosphere.copernicus.eu/api
+catalog_url: https://ads.atmosphere.copernicus.eu/api/catalogue/v1/collections
+# Original native GRIB is preserved. netcdf_zip is also supported.
+data_format: grib
+# NetCDF4/HDF5 format, explicit backend to avoid native netCDF-C lifecycle conflicts.
+netcdf_engine: h5netcdf
+area: null
+workers: 1
+retry_attempts: 4
+backoff_seconds: 5
+http_timeout: 60
+job_timeout_seconds: 21600
+poll_seconds: 15
+min_free_disk_gib: 2
+max_download_gib: 10
+chunks: {time: 1, latitude: 121, longitude: 120}
+grid: {latitude: 241, longitude: 480, spacing_degrees: 0.75}
+qc: {minimum_bytes: 100, max_missing_fraction: 0.0}
+# Conservative decoded float32 storage planning, not compressed transfer sizes.
+storage_copies: 4
+sources:
+  EAC4:
+    monthly: cams-global-reanalysis-eac4-monthly
+    subdaily: cams-global-reanalysis-eac4
+  CAMS_OPERATIONAL:
+    subdaily: cams-global-atmospheric-composition-forecasts

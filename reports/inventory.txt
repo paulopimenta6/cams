@@ -1,0 +1,8 @@
+Availability: OFFLINE SNAPSHOT
+pollutant expected_first expected_last first_date last_date  months_expected  months_available  missing  files  bytes status
+       co        2003-01       2025-12       None      None              276                 0      276      0      0  EMPTY
+      no2        2003-01       2025-12       None      None              276                 0      276      0      0  EMPTY
+       o3        2003-01       2025-12       None      None              276                 0      276      0      0  EMPTY
+     pm10        2003-01       2025-12       None      None              276                 0      276      0      0  EMPTY
+     pm25        2003-01       2025-12       None      None              276                 0      276      0      0  EMPTY
+      so2        2003-01       2025-12       None      None              276                 0      276      0      0  EMPTY

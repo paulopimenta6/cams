@@ -1,0 +1,12 @@
+usage: camsaq [-h] [--config CONFIG]
+              {inventory,plan,download-monthly,download-subdaily,update,smoke,validate,process,consolidate,extract-point,extract-region,map,analyze}
+              ...
+
+CAMS EAC4 reproducible historical archive
+
+positional arguments:
+  {inventory,plan,download-monthly,download-subdaily,update,smoke,validate,process,consolidate,extract-point,extract-region,map,analyze}
+
+options:
+  -h, --help            show this help message and exit
+  --config CONFIG

@@ -1,0 +1,98 @@
+[
+  {
+    "dataset": "cams-global-reanalysis-eac4-monthly",
+    "pollutant": "pm25",
+    "kind": "monthly",
+    "request": {
+      "variable": [
+        "particulate_matter_2.5um"
+      ],
+      "data_format": "grib",
+      "year": [
+        "2003"
+      ],
+      "month": [
+        "01"
+      ],
+      "product_type": [
+        "monthly_mean"
+      ],
+      "time": [
+        "00:00"
+      ]
+    }
+  },
+  {
+    "dataset": "cams-global-reanalysis-eac4-monthly",
+    "pollutant": "co",
+    "kind": "monthly",
+    "request": {
+      "variable": [
+        "carbon_monoxide"
+      ],
+      "data_format": "grib",
+      "year": [
+        "2003"
+      ],
+      "month": [
+        "01"
+      ],
+      "product_type": [
+        "monthly_mean"
+      ],
+      "time": [
+        "00:00"
+      ],
+      "model_level": [
+        "60"
+      ]
+    }
+  },
+  {
+    "dataset": "cams-global-reanalysis-eac4",
+    "pollutant": "pm25",
+    "kind": "subdaily",
+    "request": {
+      "variable": [
+        "particulate_matter_2.5um"
+      ],
+      "data_format": "grib",
+      "date": "2003-01-01/2003-01-31",
+      "time": [
+        "00:00",
+        "03:00",
+        "06:00",
+        "09:00",
+        "12:00",
+        "15:00",
+        "18:00",
+        "21:00"
+      ]
+    }
+  },
+  {
+    "dataset": "cams-global-reanalysis-eac4",
+    "pollutant": "co",
+    "kind": "subdaily",
+    "request": {
+      "variable": [
+        "carbon_monoxide"
+      ],
+      "data_format": "grib",
+      "date": "2003-01-01/2003-01-31",
+      "time": [
+        "00:00",
+        "03:00",
+        "06:00",
+        "09:00",
+        "12:00",
+        "15:00",
+        "18:00",
+        "21:00"
+      ],
+      "model_level": [
+        "60"
+      ]
+    }
+  }
+]

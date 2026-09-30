@@ -1,0 +1,93 @@
+* Getting build dependencies for wheel...
+running egg_info
+writing src/cams_global_air_quality.egg-info/PKG-INFO
+writing dependency_links to src/cams_global_air_quality.egg-info/dependency_links.txt
+writing entry points to src/cams_global_air_quality.egg-info/entry_points.txt
+writing requirements to src/cams_global_air_quality.egg-info/requires.txt
+writing top-level names to src/cams_global_air_quality.egg-info/top_level.txt
+reading manifest file 'src/cams_global_air_quality.egg-info/SOURCES.txt'
+writing manifest file 'src/cams_global_air_quality.egg-info/SOURCES.txt'
+* Building wheel...
+running bdist_wheel
+running build
+running build_py
+creating build/lib/cams_air_quality
+copying src/cams_air_quality/storage.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/processing.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/config.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/extraction.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/catalog.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/downloader.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/statistics.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/requests.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/inventory.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/metadata.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/maps.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/units.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/validation.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/__init__.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/__main__.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/analysis.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/cli.py -> build/lib/cams_air_quality
+copying src/cams_air_quality/map_worker.py -> build/lib/cams_air_quality
+running egg_info
+writing src/cams_global_air_quality.egg-info/PKG-INFO
+writing dependency_links to src/cams_global_air_quality.egg-info/dependency_links.txt
+writing entry points to src/cams_global_air_quality.egg-info/entry_points.txt
+writing requirements to src/cams_global_air_quality.egg-info/requires.txt
+writing top-level names to src/cams_global_air_quality.egg-info/top_level.txt
+reading manifest file 'src/cams_global_air_quality.egg-info/SOURCES.txt'
+writing manifest file 'src/cams_global_air_quality.egg-info/SOURCES.txt'
+installing to build/bdist.linux-x86_64/wheel
+running install
+running install_lib
+creating build/bdist.linux-x86_64/wheel
+creating build/bdist.linux-x86_64/wheel/cams_air_quality
+copying build/lib/cams_air_quality/storage.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/processing.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/config.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/extraction.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/catalog.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/downloader.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/statistics.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/requests.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/inventory.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/metadata.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/maps.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/units.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/validation.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/__init__.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/__main__.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/analysis.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/cli.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+copying build/lib/cams_air_quality/map_worker.py -> build/bdist.linux-x86_64/wheel/./cams_air_quality
+running install_egg_info
+Copying src/cams_global_air_quality.egg-info to build/bdist.linux-x86_64/wheel/./cams_global_air_quality-0.1.0-py3.12.egg-info
+running install_scripts
+creating build/bdist.linux-x86_64/wheel/cams_global_air_quality-0.1.0.dist-info/WHEEL
+creating '/workspace/scratch/108de7ce5938/cams-global-air-quality/dist/.tmp-3blwoosh/cams_global_air_quality-0.1.0-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+adding 'cams_air_quality/__init__.py'
+adding 'cams_air_quality/__main__.py'
+adding 'cams_air_quality/analysis.py'
+adding 'cams_air_quality/catalog.py'
+adding 'cams_air_quality/cli.py'
+adding 'cams_air_quality/config.py'
+adding 'cams_air_quality/downloader.py'
+adding 'cams_air_quality/extraction.py'
+adding 'cams_air_quality/inventory.py'
+adding 'cams_air_quality/map_worker.py'
+adding 'cams_air_quality/maps.py'
+adding 'cams_air_quality/metadata.py'
+adding 'cams_air_quality/processing.py'
+adding 'cams_air_quality/requests.py'
+adding 'cams_air_quality/statistics.py'
+adding 'cams_air_quality/storage.py'
+adding 'cams_air_quality/units.py'
+adding 'cams_air_quality/validation.py'
+adding 'cams_global_air_quality-0.1.0.dist-info/METADATA'
+adding 'cams_global_air_quality-0.1.0.dist-info/WHEEL'
+adding 'cams_global_air_quality-0.1.0.dist-info/entry_points.txt'
+adding 'cams_global_air_quality-0.1.0.dist-info/top_level.txt'
+adding 'cams_global_air_quality-0.1.0.dist-info/RECORD'
+removing build/bdist.linux-x86_64/wheel
+Successfully built cams_global_air_quality-0.1.0-py3-none-any.whl

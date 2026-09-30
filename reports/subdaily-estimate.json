@@ -1,0 +1,9 @@
+{
+  "batches_files": 1656,
+  "fields": 403248,
+  "grid_cells": 115680,
+  "float32_uncompressed_bytes": 186590914560,
+  "float32_uncompressed_GiB": 173.77633094787598,
+  "planning_disk_GiB": 695.1053237915039,
+  "assumptions": "global float32; raw + interim + processed + temporary (configurable); compression and metadata not measured; bbox estimate is conservative"
+}

@@ -1,0 +1,8 @@
+.                                                                        [100%]
+=============================== warnings summary ===============================
+tests/test_validation.py::test_grib_real_codec
+  /workspace/scratch/108de7ce5938/.venv-cams/lib/python3.12/site-packages/cfgrib/xarray_plugin.py:132: FutureWarning: In a future version of xarray decode_timedelta will default to False rather than None. To silence this warning, set decode_timedelta to True, False, or a 'CFTimedeltaCoder' instance.
+    vars, attrs, coord_names = xr.conventions.decode_cf_variables(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 0.98s

@@ -1,0 +1,51 @@
+{
+  "recorded_at": "2026-09-29T23:29:05.510109+00:00",
+  "access": "direct public HTTPS; official ADS catalogue links followed for form and constraints",
+  "assets": [
+    {
+      "filename": "monthly.collection.json",
+      "bytes": 5965,
+      "sha256": "f532a09f47b3394b69e3bba427688931114d8d510d06ce9608f67badbb046d1e"
+    },
+    {
+      "filename": "monthly.constraints.json",
+      "bytes": 9353,
+      "sha256": "355b4cb4e5a0d5fb1693e1e986c78bebd30646cd9116510e40f791406b43709c"
+    },
+    {
+      "filename": "monthly.form.json",
+      "bytes": 18124,
+      "sha256": "b7601073344a5891efa474640caf35c27470b9735296090ccfb96fcf9ba5d3dd"
+    },
+    {
+      "filename": "operational.collection.json",
+      "bytes": 5464,
+      "sha256": "18884a19dbd58916ee426ca72a906a3ce5a9061ddccde2b81ed6d57f737037bd"
+    },
+    {
+      "filename": "operational.constraints.json",
+      "bytes": 886338,
+      "sha256": "15c6b093249bf4b740028ba1e0ce7d20d8785333f35506effc13c67412ec03ef"
+    },
+    {
+      "filename": "operational.form.json",
+      "bytes": 93863,
+      "sha256": "4df05f28440533084a70b0b4aa1232f9c3350e8aa03f8e32a9d214c7dee2afd8"
+    },
+    {
+      "filename": "subdaily.collection.json",
+      "bytes": 5877,
+      "sha256": "0f7ef928bd8df6e190507f8a0f0d76d81d2e54fc0ddb1075e1c99ca4e7101d48"
+    },
+    {
+      "filename": "subdaily.constraints.json",
+      "bytes": 7850,
+      "sha256": "92c9763d6965885aa14b50955746702733e5d02827c6ee836950cc11ac34dc7b"
+    },
+    {
+      "filename": "subdaily.form.json",
+      "bytes": 27765,
+      "sha256": "6a2af3010fc6d16fb41eb13fd8665b7e6b16f17d3fcaff3962dbd2ebb1ecdec2"
+    }
+  ]
+}

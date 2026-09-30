@@ -1,0 +1,6 @@
+Found existing installation: psutil 7.2.2
+Uninstalling psutil-7.2.2:
+  Successfully uninstalled psutil-7.2.2
+Found existing installation: ipykernel 7.4.0
+Uninstalling ipykernel-7.4.0:
+  Successfully uninstalled ipykernel-7.4.0
