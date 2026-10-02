@@ -1,0 +1,109 @@
+{
+  "first_observed": "2003-01-01",
+  "last_observed": "2003-12-01",
+  "months_observed": 12,
+  "months_usable": 12,
+  "months_expected_between_endpoints": 12,
+  "missing_months": [],
+  "invalid_months": [],
+  "complete_years": [
+    2003
+  ],
+  "reference_years": [],
+  "units": "ug m-3",
+  "helper_sha256": "83931389cbb280b43ba7bcc152f483a36c403e98dcc0bcb32e51ba3ade1b790f",
+  "qc_policy": "All grid cells finite in each included month; no spatial imputation",
+  "reference_policy": "All available complete calendar years; may be nonconsecutive",
+  "climatology_status": "monthly_cycle_only",
+  "source": "EAC4",
+  "variable": "pm10",
+  "bbox": null,
+  "configured_area": null,
+  "created_at": "2026-10-02T20:36:50.483829+00:00",
+  "files": [
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/01_1ec4c8f27fa1_93fd98aef467e643.nc",
+      "processed_checksum": "954cb14f501158ba9f3d699a2acfb036fbdc9d4ee712c7f5b0906aa74384e5e1",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/01/pm10_2003-01_1ec4c8f27fa1.grib",
+      "checksum": "fa54deb2b06076aac200fab884042483181655cf3e960c49c90f5978c76f9e81",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"01\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/02_1f7c5a010b27_8e65fab9519f6475.nc",
+      "processed_checksum": "6b271d7b5135d681098b08d864f6f219ea175653ff4734fb3f921240794b19cf",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/02/pm10_2003-02_1f7c5a010b27.grib",
+      "checksum": "cfca7f2c7dc9025f403cee21fa6329f68b99032609b71377ae47a43f849b8a19",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"02\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/03_857a4d53aad1_355f2f2d8d29da54.nc",
+      "processed_checksum": "f892dc653f2a22de43f9247dbc6e5cd4ac68421d515f54b5ec5c4e0235ff1055",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/03/pm10_2003-03_857a4d53aad1.grib",
+      "checksum": "64fd1bd625a0c6fcb20d976d35193728ab1b50e0e49086f2cd5b156d12be9387",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"03\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/04_79c2808159ce_3896df9f789d1813.nc",
+      "processed_checksum": "986c4162b24b11faa9ad329b98a78fe2a7ae4753db5d79824d63a4f19dc89fe4",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/04/pm10_2003-04_79c2808159ce.grib",
+      "checksum": "8141a541618f743a9945f2e4f81bba947d964eb1803260cd758798f41944a119",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"04\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/05_4d8e9f3ccc91_22022f10b0dfd726.nc",
+      "processed_checksum": "7996829e77e39c15abb59657a5cdd2bbac296c3a9dd49da94a613967d25366c0",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/05/pm10_2003-05_4d8e9f3ccc91.grib",
+      "checksum": "f806bde1d45a6d20faaf52f6a7bdfbcf43ae071d61f77d8e1477230d0b4cce54",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"05\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/06_a3fed9b01d90_dd90706d4de39d20.nc",
+      "processed_checksum": "40d0fdd6772c28e1c4fbb7dabb96cc7111a55b8bd83be9f2922f183e75259740",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/06/pm10_2003-06_a3fed9b01d90.grib",
+      "checksum": "674c9db152639bc3421f28f065f246ae794694757ebfaf6da84e894a46db36ae",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"06\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/07_db89b54b6427_b8636aec24e9b87e.nc",
+      "processed_checksum": "8eb35aea620163f0c20b9a991401bea90e47a6949b713b680fbed49448a5ef05",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/07/pm10_2003-07_db89b54b6427.grib",
+      "checksum": "521caceabfd2d7be89c75e74fc6e99219fb88694a2a65f4446188f9bf9e74efc",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"07\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/08_ce7a8454e03f_07c9f2fe0095d8e4.nc",
+      "processed_checksum": "2dda47095569ad9d758433bb15da1bd5cc8c0f0681d77bb835540069bcdda965",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/08/pm10_2003-08_ce7a8454e03f.grib",
+      "checksum": "825f9cf3010001c322f550df4ca0471260dd210ee31c190afc29ed266b732368",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"08\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/09_7520f65e603c_dbe0a4b85a09f75c.nc",
+      "processed_checksum": "e3239aef9eee7035c4a1fae272677d9687a00717cfbd57ed80d96952ccbc6ec9",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/09/pm10_2003-09_7520f65e603c.grib",
+      "checksum": "18b7b37ac09fddcbce09a1b6b4b10ae96a833cf45333375cb4e410ce2d54c8e0",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"09\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/10_dd30cae660c4_03cd9001be6ea14e.nc",
+      "processed_checksum": "1315ec7d3ef95318bad115dc101f90e1ad27a0ad1e3ffbae94e471b1d4fd066d",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/10/pm10_2003-10_dd30cae660c4.grib",
+      "checksum": "51e0eb8fac750651aee13a5ec484c51d4c0b8b0073f3be53437f00f0fb718b8b",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"10\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/11_2444f1db9774_04a83e94debf66fb.nc",
+      "processed_checksum": "a35da147357360d7fed5f396ed501c9bdd756dd9ad86d4d3b041addaeadba99c",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/11/pm10_2003-11_2444f1db9774.grib",
+      "checksum": "c65a3646e4c923a0f9cc60b0db86a82fda0767d5ad84ecc156175065a1eec39d",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"11\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    },
+    {
+      "processed_path": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/processed/eac4/monthly/pm10/2003/12_9ab398015eb3_cedf03b4278870d0.nc",
+      "processed_checksum": "f40fdf88bbf154a18275677dff8f83f4c94e19bc36c7e42e619fd6b28f8aabf9",
+      "filepath": "/home/paulo/Documentos/meus_codigos/cams/cams-global-air-quality/data/raw/eac4/monthly/pm10/2003/12/pm10_2003-12_9ab398015eb3.grib",
+      "checksum": "d8963c5ef1a639b9ba6de067ff3f9acd5b089cfdfc3c4709160e7d9db7901c15",
+      "api_request": "{\"data_format\": \"grib\", \"month\": [\"12\"], \"product_type\": [\"monthly_mean\"], \"time\": [\"00:00\"], \"variable\": [\"particulate_matter_10um\"], \"year\": [\"2003\"]}"
+    }
+  ]
+}

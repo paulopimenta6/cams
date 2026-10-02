@@ -1,0 +1,116 @@
+[
+  {
+    "first_observed": "2003-01-01",
+    "last_observed": "2003-12-01",
+    "months_observed": 12,
+    "months_usable": 12,
+    "months_expected_between_endpoints": 12,
+    "missing_months": [],
+    "invalid_months": [],
+    "complete_years": [
+      2003
+    ],
+    "reference_years": [],
+    "units": "kg kg-1",
+    "helper_sha256": "83931389cbb280b43ba7bcc152f483a36c403e98dcc0bcb32e51ba3ade1b790f",
+    "qc_policy": "All grid cells finite in each included month; no spatial imputation",
+    "reference_policy": "All available complete calendar years; may be nonconsecutive",
+    "climatology_status": "monthly_cycle_only",
+    "variable": "co"
+  },
+  {
+    "first_observed": "2003-01-01",
+    "last_observed": "2003-12-01",
+    "months_observed": 12,
+    "months_usable": 12,
+    "months_expected_between_endpoints": 12,
+    "missing_months": [],
+    "invalid_months": [],
+    "complete_years": [
+      2003
+    ],
+    "reference_years": [],
+    "units": "kg kg-1",
+    "helper_sha256": "83931389cbb280b43ba7bcc152f483a36c403e98dcc0bcb32e51ba3ade1b790f",
+    "qc_policy": "All grid cells finite in each included month; no spatial imputation",
+    "reference_policy": "All available complete calendar years; may be nonconsecutive",
+    "climatology_status": "monthly_cycle_only",
+    "variable": "no2"
+  },
+  {
+    "first_observed": "2003-01-01",
+    "last_observed": "2003-12-01",
+    "months_observed": 12,
+    "months_usable": 12,
+    "months_expected_between_endpoints": 12,
+    "missing_months": [],
+    "invalid_months": [],
+    "complete_years": [
+      2003
+    ],
+    "reference_years": [],
+    "units": "kg kg-1",
+    "helper_sha256": "83931389cbb280b43ba7bcc152f483a36c403e98dcc0bcb32e51ba3ade1b790f",
+    "qc_policy": "All grid cells finite in each included month; no spatial imputation",
+    "reference_policy": "All available complete calendar years; may be nonconsecutive",
+    "climatology_status": "monthly_cycle_only",
+    "variable": "o3"
+  },
+  {
+    "first_observed": "2003-01-01",
+    "last_observed": "2003-12-01",
+    "months_observed": 12,
+    "months_usable": 12,
+    "months_expected_between_endpoints": 12,
+    "missing_months": [],
+    "invalid_months": [],
+    "complete_years": [
+      2003
+    ],
+    "reference_years": [],
+    "units": "ug m-3",
+    "helper_sha256": "83931389cbb280b43ba7bcc152f483a36c403e98dcc0bcb32e51ba3ade1b790f",
+    "qc_policy": "All grid cells finite in each included month; no spatial imputation",
+    "reference_policy": "All available complete calendar years; may be nonconsecutive",
+    "climatology_status": "monthly_cycle_only",
+    "variable": "pm10"
+  },
+  {
+    "first_observed": "2003-01-01",
+    "last_observed": "2003-12-01",
+    "months_observed": 12,
+    "months_usable": 12,
+    "months_expected_between_endpoints": 12,
+    "missing_months": [],
+    "invalid_months": [],
+    "complete_years": [
+      2003
+    ],
+    "reference_years": [],
+    "units": "ug m-3",
+    "helper_sha256": "83931389cbb280b43ba7bcc152f483a36c403e98dcc0bcb32e51ba3ade1b790f",
+    "qc_policy": "All grid cells finite in each included month; no spatial imputation",
+    "reference_policy": "All available complete calendar years; may be nonconsecutive",
+    "climatology_status": "monthly_cycle_only",
+    "variable": "pm25"
+  },
+  {
+    "first_observed": "2003-01-01",
+    "last_observed": "2003-12-01",
+    "months_observed": 12,
+    "months_usable": 12,
+    "months_expected_between_endpoints": 12,
+    "missing_months": [],
+    "invalid_months": [],
+    "complete_years": [
+      2003
+    ],
+    "reference_years": [],
+    "units": "kg kg-1",
+    "helper_sha256": "83931389cbb280b43ba7bcc152f483a36c403e98dcc0bcb32e51ba3ade1b790f",
+    "qc_policy": "All grid cells finite in each included month; no spatial imputation",
+    "reference_policy": "All available complete calendar years; may be nonconsecutive",
+    "climatology_status": "monthly_cycle_only",
+    "variable": "so2"
+  }
+]

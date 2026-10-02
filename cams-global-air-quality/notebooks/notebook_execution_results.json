@@ -1,0 +1,65 @@
+{
+  "synthetic_only": true,
+  "results": [
+    {
+      "scenario": "empty",
+      "notebook": "01_inventory.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "empty",
+      "notebook": "02_global_climatology.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "empty",
+      "notebook": "03_timeseries_example.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "partial",
+      "notebook": "01_inventory.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "partial",
+      "notebook": "02_global_climatology.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "partial",
+      "notebook": "03_timeseries_example.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "single_year",
+      "notebook": "01_inventory.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "single_year",
+      "notebook": "02_global_climatology.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "single_year",
+      "notebook": "03_timeseries_example.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "gaps_and_different_variables",
+      "notebook": "01_inventory.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "gaps_and_different_variables",
+      "notebook": "02_global_climatology.ipynb",
+      "status": "PASS"
+    },
+    {
+      "scenario": "gaps_and_different_variables",
+      "notebook": "03_timeseries_example.ipynb",
+      "status": "PASS"
+    }
+  ]
+}
