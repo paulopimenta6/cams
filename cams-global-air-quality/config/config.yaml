@@ -34,3 +34,14 @@ sources:
     subdaily: cams-global-reanalysis-eac4
   CAMS_OPERATIONAL:
     subdaily: cams-global-atmospheric-composition-forecasts
+  GHG_INVERSION:
+    daily_mean: cams-global-greenhouse-gas-inversion
+# Keep the GHG inversion separate from EAC4: 1° grid, 34 layers and ppb dry-air mole fraction.
+ghg_inversion:
+  variable: methane
+  quantity: concentration
+  input_observations: first_guess
+  version: v25r1
+  grid: {latitude: 180, longitude: 360, spacing_degrees: 1.0, global: true}
+  levels: 34
+  chunks: {time: 1, level: 1, latitude: 90, longitude: 120}

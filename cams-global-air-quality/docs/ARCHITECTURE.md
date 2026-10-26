@@ -1,5 +1,9 @@
 # Arquitetura e decisões
 
+O diagrama e as regras EAC4 abaixo descrevem o fluxo dos seis poluentes. O
+adaptador CH4 CAMS73 compartilha download, checksum e publicação de derivados,
+mas usa configuração, validação, manifesto e armazenamento próprios.
+
 ```mermaid
 flowchart TD
     A["Catálogo, formulário e constraints ADS"] --> B["Plano: variável × mês"]
@@ -41,7 +45,24 @@ data/processed/eac4/{monthly|subdaily}/{variable}/{year}/
 data/processed/eac4/{monthly|subdaily}/zarr/{scope-hash}/
     {year}-{content-generation}.zarr
     index.json
+metadata/downloads.sqlite
+
+data/raw/ghg_inversion/ch4/first_guess/{requested-version}/{year}/{month}/
+    ch4_{year-month}_{request-hash}.nc
+data/processed/ghg_inversion/ch4/first_guess/{resolved-release}/daily_mean/{year}/
+    {month}_{request-hash}_{raw-checksum}.nc
+data/processed/ghg_inversion/ch4/first_guess/{resolved-release}/daily_mean/zarr/
+    {year}-{content-generation}.zarr
+    index.json
+metadata/ghg_inversion/downloads.sqlite
 ```
+
+Na importação de um arquivo local, o pedido registrado é **reconstruído** a
+partir do nome e do conteúdo. Ele não prova o ID do job ADS que criou o arquivo.
+O CH4 mantém os 34 níveis; a versão do derivado vem do atributo `release` do
+NetCDF, mesmo se a seleção solicitada era `latest`. A análise CH4 abre partições
+NetCDF conferidas pelo manifesto. O Zarr CH4 é um produto adicional indexado
+por ano e versão. Ele não é anexado ao Zarr EAC4.
 
 Originais nunca são substituídos por conversões. Um payload corrompido ou com
 checksum alterado é preservado com sufixo `.corrupt-*`. Não é sobrescrito um

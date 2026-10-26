@@ -23,7 +23,7 @@ def cell_edges(centres, polar=False):
     return np.clip(edges, -90, 90) if polar else edges
 
 
-def plot_map(da, path, title=None, anomaly=False, coastlines=False):
+def plot_map(da, path, title=None, anomaly=False, coastlines=False, vmin=None, vmax=None):
     """Render one field in a separate process; atomically publish only on exit code 0."""
     if set(da.dims) != {"latitude", "longitude"}:
         raise ValueError("Map requires a single latitude/longitude field")
@@ -48,6 +48,8 @@ def plot_map(da, path, title=None, anomaly=False, coastlines=False):
                     "units": str(da.attrs.get("units", "")),
                     "anomaly": bool(anomaly),
                     "coastlines": bool(coastlines),
+                    "vmin": vmin,
+                    "vmax": vmax,
                 }
             )
         )
@@ -71,7 +73,8 @@ def plot_map(da, path, title=None, anomaly=False, coastlines=False):
 
 
 def render_arrays(
-    values, lat_edges, lon_edges, path, title, units, anomaly=False, coastlines=False
+    values, lat_edges, lon_edges, path, title, units, anomaly=False, coastlines=False,
+    vmin=None, vmax=None
 ):
     """Internal worker; imports Cartopy only inside the isolated rendering process."""
     import matplotlib
@@ -91,6 +94,10 @@ def render_arrays(
         if anomaly:
             lim = float(np.nanmax(np.abs(values))) or 1.0
             kw.update(vmin=-lim, vmax=lim)
+        if vmin is not None or vmax is not None:
+            if vmin is None or vmax is None or not np.isfinite([vmin, vmax]).all() or vmin >= vmax:
+                raise ValueError("Map colour bounds must be finite and increasing")
+            kw.update(vmin=vmin, vmax=vmax)
         mesh = ax.pcolormesh(
             lon_edges - central, lat_edges, values, transform=projection, shading="flat", **kw
         )
@@ -100,7 +107,8 @@ def render_arrays(
             ax.coastlines(resolution="110m", linewidth=0.5)
         ax.gridlines(draw_labels=True, linewidth=0.25)
         ax.set_title(title)
-        fig.colorbar(mesh, ax=ax, label=units, shrink=0.8, pad=0.08)
+        fig.colorbar(mesh, ax=ax, label=units, shrink=0.8, pad=0.08,
+                     extend="both" if vmin is not None else "neither")
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path, dpi=160, bbox_inches="tight")

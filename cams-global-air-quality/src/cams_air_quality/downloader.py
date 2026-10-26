@@ -85,7 +85,8 @@ def download_range(url, target, expected, timeout):
         raise IOError("Incomplete payload size; partial retained for resume")
 
 
-def download_batch(cfg, batch, client=None):
+def download_batch(cfg, batch, client=None, validator=None):
+    validator = validator or validate_file
     manifest = Manifest(Path(cfg["metadata_dir"]) / "downloads.sqlite")
     manifest.add(batch)
     path = Path(batch.filepath)
@@ -96,7 +97,7 @@ def download_batch(cfg, batch, client=None):
             return {"key": batch.key, "status": "skipped", "bytes": row["filesize"]}
         # Recover completed file after crash between atomic rename and SQL commit.
         if path.exists():
-            qc = validate_file(path, batch, cfg)
+            qc = validator(path, batch, cfg)
             if qc["status"] != "FAIL" and (not row["checksum"] or sha256(path) == row["checksum"]):
                 manifest.set(
                     batch.key,
@@ -156,7 +157,7 @@ def download_batch(cfg, batch, client=None):
                 manifest.set(
                     batch.key, "downloaded", download_date=now(), filesize=part.stat().st_size
                 )
-                qc = validate_file(part, batch, cfg)
+                qc = validator(part, batch, cfg)
                 manifest.set(batch.key, "downloaded", qc_json=json.dumps(qc))
                 if qc["status"] == "FAIL":
                     part.rename(part.with_name(part.name + f".corrupt-{time.time_ns()}"))

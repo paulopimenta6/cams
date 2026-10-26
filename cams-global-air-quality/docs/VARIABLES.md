@@ -55,5 +55,9 @@ uma reanálise especializada de gases de efeito estufa. Nitrato/amônio e outros
 constituintes não são prometidos no produto mensal: a presença no operacional ou
 na lista subdiária não garante disponibilidade mensal equivalente.
 
+O metano do produto de inversão CAMS73 usa outro registro e outro fluxo, descritos
+em [CH4_CAM73.md](CH4_CAM73.md): `CH4` é fração molar seca em ppb, com 34 níveis,
+e não deve ser inserido na lista EAC4 `config/pollutants.yaml`.
+
 Fontes: formulários/constraints oficiais em `evidence/`; [tabela ECMWF](https://confluence.ecmwf.int/plugins/viewsource/viewpagesrc.action?pageId=514323240)
 e [banco de parâmetros ecCodes](https://codes.ecmwf.int/grib/param-db/).

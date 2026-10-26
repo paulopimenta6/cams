@@ -16,11 +16,18 @@ Pense no projeto como uma biblioteca:
 - Os **notebooks** são cadernos de estudo.
 - Os **mapas e tabelas** apresentam os resultados.
 
-> Este guia descreve a versão 0.1.0 do projeto e o complemento opcional `04_testes_um_ano.ipynb`.
+> Este guia descreve a EAC4 e o fluxo separado de metano CAMS73. A parte EAC4
+> também inclui o complemento opcional `04_testes_um_ano.ipynb`.
 >
 > Os exemplos iniciais usam **2003**. Antes de escolher outro período, consulte o inventário.
 >
 > O estado real da sua base depende dos downloads e das validações realizados na sua máquina.
+
+**Escolha seu caminho:** se você dispõe do arquivo de metano de setembro de 2024,
+comece pela [seção 24](#24-metano-ch4-passo-a-passo). Para obter ou analisar os
+seis poluentes da EAC4, siga a instalação na seção 4 e o teste de um ano na seção
+7. Comandos que começam por `camsaq ch4` trabalham somente com CAMS73; os demais
+comandos `camsaq` deste guia trabalham com EAC4.
 
 ---
 
@@ -49,6 +56,7 @@ Pense no projeto como uma biblioteca:
 21. Desenvolvimento e novas variáveis
 22. Limitações científicas
 23. Glossário e referências
+24. Metano CH4: passo a passo
 
 ---
 
@@ -74,6 +82,7 @@ O caminho principal é:
 | Extrair séries de pontos e regiões | Implementada |
 | Calcular estatísticas descritivas | Implementada |
 | Gerar mapas e executar notebooks | Implementada |
+| Importar ou baixar CH4 CAMS73 e analisar seus 34 níveis | Implementada em fluxo separado |
 | Testar especificamente um ano | Notebook complementar |
 | Baixar automaticamente todas as espécies disponíveis no CAMS | Não implementada |
 | Mesclar EAC4 e previsão operacional | Não implementada |
@@ -108,17 +117,24 @@ Uma reanálise combina um modelo com observações para reconstruir as condiçõ
 | EAC4 mensal | `cams-global-reanalysis-eac4-monthly` | Produto inicial recomendado |
 | EAC4 subdiária | `cams-global-reanalysis-eac4` | Estudos com maior detalhe temporal |
 | CAMS operacional | `cams-global-atmospheric-composition-forecasts` | Referência para expansão futura |
+| CAMS73 inversão de gases de efeito estufa | `cams-global-greenhouse-gas-inversion` | Metano diário; fonte separada da EAC4 |
 
-O produto operacional está documentado, mas não é baixado ou combinado automaticamente com a EAC4.
+O produto operacional está documentado, mas não é baixado ou combinado
+automaticamente com a EAC4. O CAMS73 possui comandos próprios, `camsaq ch4`;
+seus valores não são incorporados à base EAC4.
 
 ### Cobertura espacial e temporal
 
-A grade global ADS utilizada possui:
+A grade global EAC4 utilizada possui:
 
 - resolução de **0,75° × 0,75°**;
 - **241 latitudes**;
 - **480 longitudes**;
 - dados mensais ou subdiários de aproximadamente três em três horas.
+
+O CAMS73 deste projeto usa outra grade global: **1° × 1°**, com **180 latitudes**,
+**360 longitudes** e médias **diárias**. O arquivo examinado contém 34 níveis
+verticais; veja a [seção 24](#24-metano-ch4-passo-a-passo).
 
 A série EAC4 começa em 2003. O último período deve ser consultado no catálogo durante a execução.
 
@@ -244,7 +260,8 @@ O `-e` significa instalação editável: o Python utiliza o código da pasta do 
 
 ### 4.4. Dependências dos notebooks
 
-Mantenha estes grupos no `pyproject.toml`:
+O `pyproject.toml` já declara estes grupos; o comando de instalação da seção
+4.3 acrescenta `nbconvert` para executar notebooks pelo terminal:
 
 ```toml
 [project.optional-dependencies]
@@ -257,31 +274,20 @@ dev = [
 notebooks = [
     "jupyterlab>=4",
     "nbclient>=0.10",
-    "nbconvert>=7,<8",
     "ipykernel>=6,<7",
     "jinja2>=3.1,<4",
 ]
 ```
 
-Se a seção já existir, ajuste seu conteúdo. Não crie outra seção com o mesmo nome.
-
-O `requirements.txt` pode conter:
-
-```text
--e .[dev,notebooks]
-```
-
-Nesse caso, a instalação pode ser feita com:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-Não é necessário executar todas as alternativas de instalação.
+Você não precisa editar `pyproject.toml` para seguir este guia. Se optar por
+usar `requirements.txt`, confira seu conteúdo antes de instalar: ele pode
+descrever outro conjunto de dependências. Não é necessário executar todas as
+alternativas de instalação.
 
 ### 4.5. Reprodutibilidade
 
 O `requirements-lock.txt` registra versões exatas do ambiente da primeira fase.
+Ele é histórico e não substitui o teste da instalação atual com CH4.
 
 Ele não é atualizado automaticamente quando novas dependências são acrescentadas ao `pyproject.toml`.
 
@@ -443,10 +449,17 @@ Os argumentos `--start` e `--end` do comando têm prioridade sobre o arquivo.
 | `area` | `null` para cobertura global |
 | `netcdf_engine` | Backend de leitura/escrita NetCDF |
 | `qc` | Critérios de validação |
+| `ghg_inversion.version` | Release CH4 padrão para planejar/analisar, inicialmente `v25r1` |
+| `ghg_inversion.grid`, `levels`, `chunks` | Grade e 34 níveis esperados, além dos blocos de leitura CH4 |
 
 Comece com `workers: 1`.
 
 Não altere a configuração da grade para contornar uma incompatibilidade encontrada no arquivo.
+`start_date`, `end_date`, `pollutants`, `area` e `data_format` descrevem o fluxo
+EAC4; o CH4 usa meses explícitos e grade global própria. Os rótulos CH4
+`variable: methane`, `quantity: concentration` e
+`input_observations: first_guess` documentam a variante implementada: editá-los **não** acrescenta
+suporte a outras seleções ADS. Uma nova variante requer código, QC e testes.
 
 ### Outra configuração
 
@@ -1173,6 +1186,37 @@ camsaq download-monthly --help
 | `extract-region` | Exportar média regional |
 | `map` | Salvar um mapa mensal |
 | `analyze` | Executar análise exploratória mensal |
+| `ch4 plan` | Consultar a disponibilidade ADS e estimar o disco para metano |
+| `ch4 download` | Baixar, validar, processar e indexar metano |
+| `ch4 import` | Registrar um NetCDF CAMS73 já existente |
+| `ch4 validate` | Revalidar os originais CH4 registrados |
+| `ch4 process` | Reprocessar originais CH4 validados |
+| `ch4 consolidate` | Publicar o índice Zarr anual de CH4 |
+| `ch4 analyze` | Produzir séries e mapas CH4 de um nível escolhido |
+
+Os comandos de CH4 são explicados com exemplos na [seção 24](#24-metano-ch4-passo-a-passo).
+Para conferir a sintaxe exata instalada, execute `camsaq ch4 --help` ou, por
+exemplo, `camsaq ch4 analyze --help`.
+
+| Comando EAC4 | Argumentos mais importantes | Pré condição / saída |
+|---|---|---|
+| `inventory` | `--start`, `--end`, `--pollutants`, `--kind`, opcional `--offline-evidence` | Consulta cobertura e escreve CSV em `metadata/`; não baixa campos. |
+| `plan` | Mesmos filtros de `inventory` | Escreve `metadata/plan-monthly.json` ou `plan-subdaily.json` e mostra a estimativa. |
+| `smoke` | Período, **uma** variável em `--pollutants`, `--kind` | Faz um piloto real, com credencial ADS. |
+| `download-monthly` | Período, variáveis, `--max-batches`, `--retry-failed` | Solicita/processa lotes mensais; precisa de credencial. |
+| `download-subdaily` | Mesmas opções de download | Solicita/processa lotes de três em três horas; costuma exigir muito disco. |
+| `update` | Mesmas opções de download | Busca meses mensais novos ou faltantes no intervalo escolhido. |
+| `validate` | Sem filtros | Confere todos os originais EAC4 registrados e escreve `metadata/qc-report.json`. |
+| `process` | `--kind monthly|subdaily` | Produz ou verifica partições NetCDF a partir de originais válidos. |
+| `consolidate` | `--kind monthly|subdaily` | Publica Zarr e índice; exige cobertura compatível entre variáveis configuradas. |
+| `extract-point` | `--pollutant`, `--lat`, `--lon`, `--output` | Exporta série da célula mais próxima da base consolidada. |
+| `extract-region` | `--pollutant`, `--bbox N W S E`, `--output` | Exporta média espacial por área do retângulo. |
+| `map` | `--pollutant`, `--date AAAA-MM`, `--output`, opcional `--coastlines` | Salva PNG de um mês consolidado. |
+| `analyze` | `--baseline-start`, `--baseline-end`, `--output` | Análise exploratória mensal EAC4 de PM2.5, NO₂ e O₃; requer esses campos e referência disponível. |
+
+Em todos os comandos, `--config CAMINHO` vem antes do nome do comando. Um
+comando que escreve produtos não cria dados reais se ainda não houver originais
+válidos; nesses casos, consulte o inventário e o QC primeiro.
 
 ### Opções de período e seleção
 
@@ -1188,6 +1232,11 @@ camsaq download-monthly \
 ```
 
 Essa seleção não modifica permanentemente o YAML.
+
+`--kind monthly|subdaily` escolhe a resolução nos comandos EAC4 que oferecem
+essa opção. `--max-batches N` limita **arquivos**, não meses completos;
+`--retry-failed` seleciona somente lotes registrados como falhos. `--config`
+escolhe outro arquivo de configuração e deve vir **antes** do subcomando.
 
 Quando há seleção explícita de poluentes pela CLI, o caminho atual não faz consolidação automática.
 
@@ -1232,7 +1281,10 @@ Para configurações alternativas, prefira a CLI principal com `--config`.
 | `data/raw/eac4/` | Originais |
 | `data/interim/` | Intermediários e cache |
 | `data/processed/eac4/` | NetCDF e Zarr |
+| `data/raw/ghg_inversion/` | Originais CH4 importados ou baixados |
+| `data/processed/ghg_inversion/` | NetCDF e Zarr CH4, separados por versão |
 | `metadata/downloads.sqlite` | Manifesto |
+| `metadata/ghg_inversion/downloads.sqlite` | Manifesto exclusivo do CH4 |
 | `metadata/` | Planos, inventários e QC |
 | `logs/` | Logs |
 | `reports/` | Figuras, tabelas e relatórios |
@@ -1456,7 +1508,9 @@ Adicionar um constituinte exige:
 
 Não basta acrescentar um nome imaginado ao YAML.
 
-Black carbon, sulfato, poeira, metano e profundidade óptica podem representar grandezas distintas e exigir tratamentos diferentes.
+Black carbon, sulfato, poeira e profundidade óptica podem representar grandezas
+distintas e exigir tratamentos diferentes. O metano CAMS73 já possui um fluxo
+separado; `methane_chemistry` da EAC4 continua fora do registro de seis variáveis.
 
 ### Git
 
@@ -1506,7 +1560,7 @@ O Git local não implica publicação automática no GitHub.
 - filtros de período para consolidação;
 - migração automatizada;
 - máscaras de polígonos;
-- escalas de cores comuns entre mapas;
+- escalas de cores comuns nas análises EAC4 (o fluxo CH4 já usa uma escala comum por execução);
 - mais constituintes;
 - integração meteorológica;
 - API;
@@ -1549,6 +1603,8 @@ O Git local não implica publicação automática no GitHub.
 - [Limitações da primeira fase](cams-global-air-quality/docs/KNOWN_LIMITATIONS.md)
 - [Recuperação do ambiente](cams-global-air-quality/docs/ENVIRONMENT_RECOVERY.md)
 - [Relatório histórico da primeira fase](cams-global-air-quality/reports/PHASE1_REPORT.md)
+- [Metano CAMS73: dados reais e pedido ADS](cams-global-air-quality/docs/CH4_CAM73.md)
+- [Todas as funções Python](cams-global-air-quality/docs/REFERENCIA_FUNCOES.md)
 
 ### Fontes oficiais
 
@@ -1556,6 +1612,7 @@ O Git local não implica publicação automática no GitHub.
 - [EAC4 mensal](https://ads.atmosphere.copernicus.eu/datasets/cams-global-reanalysis-eac4-monthly)
 - [EAC4 subdiária](https://ads.atmosphere.copernicus.eu/datasets/cams-global-reanalysis-eac4)
 - [CAMS operacional](https://ads.atmosphere.copernicus.eu/datasets/cams-global-atmospheric-composition-forecasts)
+- [CAMS73: inversão de gases de efeito estufa](https://ads.atmosphere.copernicus.eu/datasets/cams-global-greenhouse-gas-inversion)
 - [Documentação da reanálise CAMS](https://confluence.ecmwf.int/display/CKB/CAMS%3A+Reanalysis+data+documentation)
 - [Cliente ECMWF Data Stores](https://ecmwf.github.io/ecmwf-datastores-client/)
 - [Execução com nbconvert](https://nbconvert.readthedocs.io/en/latest/execute_api.html)
@@ -1568,6 +1625,156 @@ Observe os termos do provedor e cite os dados utilizados.
 
 ---
 
-**Guia revisado em 30/09/2026.**
+**Guia da EAC4 iniciado em 30/09/2026; fluxo CH4 acrescentado em 26/10/2026.**
 
 Comece com um ano, confira cada etapa e amplie a base mantendo o mesmo cuidado com integridade, unidades e rastreabilidade.
+
+---
+
+## 24. Metano CH4: passo a passo
+
+### O que há no arquivo
+
+O arquivo de exemplo `cams73_latest_ch4_conc_first_guess_dm_202409.nc` contém
+**30 médias diárias de setembro de 2024**, em uma grade global de **180 × 360
+células** e **34 níveis de modelo**. A variável `CH4` é uma **fração molar em ar
+seco**: a unidade `1e-9` do original equivale numericamente a **ppb**. Nível 1
+é a camada mais baixa; nível 34 é a mais alta. Nenhum nível corresponde, por si
+só, a uma altura fixa acima do solo.
+
+Esse arquivo vem do produto de **inversão de gases de efeito estufa CAMS73**.
+`first_guess` identifica a simulação anterior ao ajuste final pelas observações.
+Ele não deve ser trocado por `methane_chemistry` da EAC4, nem unido aos seis
+poluentes da base EAC4. O [relatório do arquivo](cams-global-air-quality/docs/CH4_CAM73.md)
+mostra metadados, verificações e como construir o pedido ADS correspondente.
+
+### Caminho A: usar um arquivo que você já possui
+
+Ative o ambiente e fique na pasta `cams-global-air-quality/`. Antes de começar,
+confira se o arquivo está no local indicado:
+
+```bash
+ls -lh ../exemplo_ch4/cams73_latest_ch4_conc_first_guess_dm_202409.nc
+camsaq ch4 import --file ../exemplo_ch4/cams73_latest_ch4_conc_first_guess_dm_202409.nc
+```
+
+O arquivo de exemplo é grande e **não está incluído no clone do GitHub**. Se
+`ls` informar que ele não existe, coloque seu NetCDF CAMS73 nesse caminho ou
+use o caminho real após `--file`. O nome deve indicar produto, versão, seleção
+`first_guess`, média diária e mês, como no exemplo. A importação confere
+conteúdo e checksum, preserva o original e cria uma cópia gerenciada. Ela já
+executa processamento e consolidação: não é preciso repetir esses passos para
+começar a análise.
+
+Uma validação pode retornar `WARNING` quando alguma célula excede 5.000 ppb.
+Isso **não corta nem corrige** o valor. Significa que o pesquisador deve examinar
+a plausibilidade física. `FAIL` impede a importação.
+
+### Caminho B: solicitar o mês ao ADS
+
+Configure o token e aceite os termos do produto, conforme a seção 5. Consulte
+primeiro o pedido e a estimativa de armazenamento:
+
+```bash
+camsaq ch4 plan --start 2024-09 --version v25r1
+camsaq ch4 download --start 2024-09 --version v25r1
+```
+
+`plan` consulta o catálogo público e **não baixa o NetCDF**. `download` envia o
+pedido autenticado, recebe o arquivo e executa validação, processamento e
+consolidação. O mês inicial `--start` é obrigatório; `--end YYYY-MM` permite
+uma sequência de meses. Prefira períodos curtos na primeira execução e confira
+o espaço de disco informado. `v25r1` fixa a versão científica encontrada no
+exemplo. A opção `--version latest` consulta a versão mais recente oferecida
+pelo ADS, que pode mudar no futuro; o arquivo processado registra a versão
+efetiva lida do próprio NetCDF.
+
+Escolha **importação ou download** para o mesmo mês e versão. Se você registrar
+duas cópias como lotes distintos do mesmo mês e da mesma versão, a consolidação
+recusará a duplicidade para evitar escolher silenciosamente uma delas. A página
+ADS `Your requests` mostra os pedidos da conta autenticada; sem acesso à conta
+original, o projeto pode reproduzir a seleção de parâmetros, mas não confirmar
+o identificador do job nem igualdade byte a byte com um download anterior.
+
+### Conferir e produzir resultados
+
+Se desejar revalidar ou refazer derivados locais:
+
+```bash
+camsaq ch4 validate
+camsaq ch4 process
+camsaq ch4 consolidate --version v25r1
+```
+
+Esses comandos examinam os lotes CH4 registrados no manifesto específico do
+produto. `validate` verifica os originais; `process` cria ou verifica NetCDF4;
+`consolidate` cria/atualiza o índice Zarr anual. Não recebem filtro de mês nessa
+versão. Repetir os comandos sobre arquivos íntegros reaproveita os derivados
+quando possível.
+
+Para analisar a **camada 1** do arquivo importado:
+
+```bash
+camsaq ch4 analyze --version v25r1 --level 1 --output reports/ch4_inversion
+```
+
+`--level` é obrigatório: escolha um inteiro disponível entre 1 e 34. O comando
+gera `area_daily.csv` (média diária ponderada pela área das células),
+`area_monthly.csv` (somente meses com todos os dias), `point_daily.csv`
+(célula mais próxima do ponto escolhido), dois mapas e `analysis.json` com
+proveniência. As tabelas CSV recebem arquivos `.metadata.json`. `--no-maps`
+evita renderizar figuras. Por padrão, o ponto é próximo de São Paulo; para
+outro local, informe `--lat` e `--lon` em graus:
+
+```bash
+camsaq ch4 analyze --level 1 --lat -15.8 --lon -47.9 \
+  --output reports/ch4_brasilia
+```
+
+Para a média espacial de um retângulo, passe **norte, oeste, sul, leste** após
+`--bbox`. O retângulo seleciona centros de células; não acompanha fronteiras
+municipais ou estaduais. O ponto de `--lat`/`--lon` continua independente:
+
+```bash
+camsaq ch4 analyze --level 1 --bbox -20 -50 -26 -43 \
+  --lat -23.5505 --lon -46.6333 --output reports/ch4_sudeste
+```
+
+Os dois mapas de cada execução usam a mesma escala visual entre os percentis
+2 e 98 do último mês completo (ou do último dia disponível). Valores além da
+escala aparecem nas cores extremas, mas **permanecem intactos nos dados**; os
+limites de cor ficam em `analysis.json`. A média de uma célula não é uma
+medição de estação. Uma média por área não é exposição da população.
+
+### Onde os arquivos ficam e o que foi conferido
+
+| Local | Conteúdo |
+|---|---|
+| `data/raw/ghg_inversion/` | Cópia preservada do original |
+| `metadata/ghg_inversion/downloads.sqlite` | Pedidos, estados, checksum e QC |
+| `data/processed/ghg_inversion/` | NetCDF4 com 34 níveis e Zarr anual |
+| `reports/ch4_inversion/` | Séries, mapas e relatório da análise de exemplo |
+
+Esses diretórios de dados e resultados locais são ignorados pelo Git. O código,
+as configurações e o relatório metodológico são versionáveis. O arquivo real
+testado passou com aviso de valores acima de 5.000 ppb; sua média global de
+setembro no nível 1 foi **1.898,9137 ppb**. A leitura da célula mais próxima de
+São Paulo produziu **2.159,8999 ppb** como média do mês. Esses números são
+estimativas do modelo para **este arquivo e este nível**; não devem ser
+generalizados a outras versões ou anos.
+
+### Problemas comuns de CH4
+
+| Mensagem ou situação | O que significa e como agir |
+|---|---|
+| Arquivo local ausente | Confira o caminho depois de `--file`; o NetCDF de 512 MiB não acompanha o GitHub. |
+| Nome do arquivo recusado | Use um NetCDF CAMS73 `ch4_conc_first_guess_dm_YYYYMM` com versão como `latest` ou `v25r1` no nome. |
+| `FAIL` no QC | Confira mês completo, 34 níveis, grade, unidades e integridade do arquivo; não force a aceitação. |
+| Falha de autenticação no download | Configure o token ADS e aceite a licença do dataset. |
+| Pedido recusado pelo catálogo | Reveja `--version` e meses ofertados no formulário atual do ADS. |
+| Sem espaço para o lote | Reduza o intervalo ou escolha um disco maior; o plano é uma estimativa. |
+| Mês duplicado na consolidação | Há dois lotes processados para o mesmo mês e a mesma versão; revise a proveniência. |
+| Nível indisponível | Use `--level` entre 1 e 34 para este produto. |
+
+Para usar as funções diretamente em Python, veja a
+[referência de funções](cams-global-air-quality/docs/REFERENCIA_FUNCOES.md).

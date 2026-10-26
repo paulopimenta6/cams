@@ -1,5 +1,8 @@
 # Operação e manutenção
 
+Este roteiro principal trata da **EAC4**. Para CH4 CAMS73, consulte a seção
+própria abaixo: são outro produto, outro manifesto e outros comandos.
+
 ## Sequência recomendada
 
 1. Configurar venv, credencial e aceite de licença; executar testes.
@@ -74,3 +77,28 @@ reutilização. Alterar chunks ou versão do código pode gerar novos derivados.
 Logs incluem timestamps UTC no conteúdo JSON, dataset, variável, ano/mês, request,
 status, bytes, elapsed, erro sanitizado e tentativa. Não incluem token nem URL
 assinada. `metadata/qc-report.json` é produzido por `camsaq validate`.
+
+## Operação do metano CAMS73
+
+Na pasta do pacote, com o ambiente ativo, consulte primeiro o catálogo e o
+orçamento de disco. Escolha **import** se já tem o NetCDF ou **download** se vai
+solicitar o arquivo ao ADS:
+
+```bash
+camsaq ch4 plan --start 2024-09 --version v25r1
+camsaq ch4 import --file ../exemplo_ch4/cams73_latest_ch4_conc_first_guess_dm_202409.nc
+# Ou, com token e licença ADS configurados:
+camsaq ch4 download --start 2024-09 --version v25r1
+```
+
+A importação valida, copia, processa e indexa; o download também. Comece com um
+mês. O arquivo de exemplo é local e não acompanha o clone do GitHub.
+
+`camsaq ch4 validate` repete QC e checksum dos originais registrados;
+`camsaq ch4 process` reconstrói derivados quando necessário;
+`camsaq ch4 consolidate --version v25r1` publica o índice Zarr. O manifesto fica
+em `metadata/ghg_inversion/downloads.sqlite`, separado do EAC4. A análise exige
+um nível: `camsaq ch4 analyze --level 1 --version v25r1`. A versão é a **release
+efetiva** encontrada no NetCDF, mesmo quando o arquivo de entrada tinha `latest`
+no nome. Não programe o mesmo mês pelos caminhos importação e download sem
+revisar duplicidade de lotes. Consulte o [passo a passo](../../GUIA_COMPLETO.md#24-metano-ch4-passo-a-passo).

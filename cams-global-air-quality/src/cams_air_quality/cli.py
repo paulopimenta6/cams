@@ -60,7 +60,103 @@ def parser():
     c.add_argument("--baseline-start", required=True)
     c.add_argument("--baseline-end", required=True)
     c.add_argument("--output", default="reports/exploratory")
+    ch4 = sub.add_parser("ch4", help="CAMS greenhouse-gas inversion CH4, separate from EAC4")
+    actions = ch4.add_subparsers(dest="ch4_command", required=True)
+    for name in ("plan", "download"):
+        c = actions.add_parser(name)
+        c.add_argument("--start", required=True, help="First month, YYYY-MM")
+        c.add_argument("--end", help="Last month, YYYY-MM; defaults to start")
+        c.add_argument("--version", help="Pinned CAMS release; default from config")
+    c = actions.add_parser("import", help="Validate and archive an existing CAMS73 NetCDF")
+    c.add_argument("--file", required=True)
+    actions.add_parser("validate")
+    actions.add_parser("process")
+    c = actions.add_parser("consolidate")
+    c.add_argument("--version", help="Resolved release; default from config")
+    c = actions.add_parser("analyze")
+    c.add_argument("--version", help="Resolved release; default from config")
+    c.add_argument("--level", type=int, required=True, help="Explicit model layer: 1 is lowest")
+    c.add_argument("--output", default="reports/ch4_inversion")
+    c.add_argument("--lat", type=float, default=-23.5505)
+    c.add_argument("--lon", type=float, default=-46.6333)
+    c.add_argument("--bbox", nargs=4, type=float, metavar=("N", "W", "S", "E"))
+    c.add_argument("--no-maps", action="store_true")
     return p
+
+
+def run_ch4_command(args, cfg):
+    from . import ghg_inversion as ghg
+
+    cmd = args.ch4_command
+    version = getattr(args, "version", None) or cfg["ghg_inversion"]["version"]
+    if cmd in ("plan", "download"):
+        snap = ghg.fetch_ch4_catalog(cfg)
+        batches = ghg.plan_batches(cfg, snap, args.start, args.end, version)
+        resources = ghg.estimate(batches, cfg["storage_copies"])
+        print(json.dumps({"estimate": resources, "requests": [b.to_dict() for b in batches]}, indent=2))
+        if cmd == "plan":
+            return 0
+        need = resources["planning_disk_GiB"] + cfg["min_free_disk_gib"]
+        if shutil.disk_usage(cfg["data_dir"]).free / 2**30 < need:
+            raise ValueError("Insufficient disk for selected CH4 months")
+        results = ghg.download(cfg, batches)
+        print(json.dumps(results, indent=2))
+        if any(r["status"] in ("failed", "processing_failed") for r in results):
+            return 1
+        m = ghg.manifest(cfg)
+        releases = {
+            ghg._release(row)
+            for result in results
+            if (row := m.get(result["key"])) and row["status"] == "processed"
+        }
+        for release in releases - {None}:
+            print(ghg.consolidate(cfg, release))
+        return 0
+    if cmd == "import":
+        batch, qc = ghg.import_file(cfg, args.file)
+        processed = ghg.process_batch(cfg, batch)
+        index = ghg.consolidate(cfg, qc["resolved_release"])
+        print(json.dumps({"raw": batch.filepath, "processed": str(processed),
+                          "index": str(index), "qc": qc}, indent=2))
+        return 0
+    if cmd == "validate":
+        m = ghg.manifest(cfg)
+        records = []
+        for row in m.rows():
+            batch = batch_from_row(row)
+            qc = ghg.validate_file(row["filepath"], batch, cfg)
+            previous = json.loads(row["qc_json"] or "{}")
+            qc.update({k: previous[k] for k in ("request_origin", "source_filename") if k in previous})
+            if qc["status"] != "FAIL" and row["checksum"] and sha256(row["filepath"]) != row["checksum"]:
+                qc["status"] = "FAIL"
+                qc["failures"].append("Stored raw checksum mismatch")
+            status = "failed" if qc["status"] == "FAIL" else (
+                "processed" if row["status"] == "processed" else "validated"
+            )
+            fields = {"qc_json": json.dumps(qc), "error": "; ".join(qc["failures"]) or None}
+            if status != "failed":
+                fields.update(checksum=sha256(row["filepath"]),
+                              filesize=Path(row["filepath"]).stat().st_size)
+            m.set(row["key"], status, **fields)
+            records.append({"key": row["key"], **qc})
+        print(json.dumps(records, indent=2))
+        return int(any(r["status"] == "FAIL" for r in records))
+    if cmd == "process":
+        outputs = []
+        for row in ghg.manifest(cfg).rows():
+            if row["status"] in ("validated", "processed"):
+                outputs.append(str(ghg.process_batch(cfg, batch_from_row(row))))
+        print(json.dumps(outputs, indent=2))
+        return 0
+    if cmd == "consolidate":
+        print(ghg.consolidate(cfg, version))
+        return 0
+    if cmd == "analyze":
+        report = ghg.analyze(cfg, args.level, args.output, version, lat=args.lat, lon=args.lon,
+                             bbox=args.bbox, maps=not args.no_maps)
+        print(json.dumps(report, indent=2, default=str))
+        return 0
+    raise ValueError(cmd)
 
 
 def run_one(cfg, b):
@@ -136,8 +232,10 @@ def main(argv=None):
                 logging.StreamHandler(),
             ],
         )
-        m = Manifest(Path(cfg["metadata_dir"]) / "downloads.sqlite")
         cmd = args.command
+        if cmd == "ch4":
+            return run_ch4_command(args, cfg)
+        m = Manifest(Path(cfg["metadata_dir"]) / "downloads.sqlite")
         if cmd in ("inventory", "plan", "download-monthly", "download-subdaily", "update", "smoke"):
             kind = "subdaily" if cmd == "download-subdaily" else getattr(args, "kind", "monthly")
             offline = getattr(args, "offline_evidence", None)

@@ -118,7 +118,8 @@ def normalize(ds, spec):
     candidates = [
         n
         for n, a in ds.data_vars.items()
-        if n in spec["aliases"] or a.attrs.get("GRIB_paramId") == spec.get("param_id")
+        if n in spec["aliases"]
+        or (spec.get("param_id") is not None and a.attrs.get("GRIB_paramId") == spec["param_id"])
     ]
     if len(candidates) != 1:
         raise ValueError(f"Expected exactly one requested variable, found {candidates}")

@@ -1,5 +1,11 @@
 # O3, CH4 e formaldeído no CAMS
 
+**Atualização sobre CH4 CAMS73:** o projeto agora possui um fluxo próprio para o
+arquivo de metano da inversão de gases de efeito estufa. Use `camsaq ch4` e o
+[guia do arquivo](../docs/CH4_CAM73.md). O texto abaixo descreve as opções de
+variáveis **EAC4** e **EGG4** examinadas para os notebooks; esses produtos não
+são intercambiáveis com CAMS73. Os notebooks 01–03 continuam restritos à EAC4.
+
 Fontes oficiais consultadas nesta atualização:
 - https://ads.atmosphere.copernicus.eu/datasets/cams-global-reanalysis-eac4-monthly?tab=overview
 - https://confluence.ecmwf.int/spaces/CKB/pages/83395896/CAMS+Reanalysis+data+documentation
@@ -11,10 +17,11 @@ A documentação identifica os nomes ADS `ozone`, `methane_chemistry` e
 identifica o nível 60; não confundir com uma medida em altura fixa de estação.
 Total column é outra variável, em kg/m², e não equivale à concentração perto do solo.
 
-O3 já consta do registro original do projeto. CH4 e HCHO não estão ativos no
-registro original de seis poluentes. Estes notebooks passarão a reconhecer seus
-arquivos quando estiverem devidamente cadastrados, baixados, validados e
-processados. Esta atualização dos notebooks não os baixa nem altera o registro.
+O3 já consta do registro EAC4 original do projeto. `methane_chemistry` e HCHO
+não estão ativos nesse registro de seis poluentes. Os notebooks EAC4 poderão
+reconhecer seus arquivos quando forem cadastrados, baixados, validados e
+processados **como EAC4**. Essa atualização dos notebooks não os baixa nem
+altera o registro; a integração CAMS73 usa outros comandos e outros arquivos.
 Antes de ampliar o downloader, valide os nomes e níveis no formulário vivo e nas
 restrições do ADS e execute pilotos reais para cada variável.
 

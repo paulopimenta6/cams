@@ -38,3 +38,4 @@ reports/regional_no2.csv
 reports/regional_no2.csv.metadata.json
 reports/sao_paulo_pm25.parquet
 reports/sao_paulo_pm25.parquet.metadata.json
+reports/ch4_inversion/

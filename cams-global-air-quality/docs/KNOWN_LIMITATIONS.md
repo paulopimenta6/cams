@@ -1,12 +1,19 @@
 # Limitações conhecidas e critérios de liberação
 
-1. **Integração autenticada pendente.** Catálogo, formulário e constraints reais
-   foram recuperados. Sem token, a tentativa de download foi bloqueada no SDK
+Este documento registra principalmente os limites da **EAC4**. A importação,
+processamento e análise do arquivo CH4 CAMS73 de setembro de 2024 foram
+executados com dados reais; o download CH4 autenticado foi testado com simulação
+de cliente, e seu pedido foi confirmado no catálogo público. Veja
+[CH4_CAM73.md](CH4_CAM73.md) para os limites específicos desse arquivo.
+
+1. **Integração autenticada EAC4 pendente.** Catálogo, formulário e restrições
+   reais foram recuperados. Sem token, a tentativa de download foi bloqueada no SDK
    antes da submissão. O código ainda precisa ser exercitado contra payloads
    mensais PM/gás e subdiários reais. Um teste sintético de GRIB não certifica
    a convenção mensal real ou o conteúdo NetCDF experimental do ADS.
-2. **Ciência ainda sem dados locais.** Nenhuma EDA real foi executada. Notebooks e
-   `analyze` são reproduzíveis quando a base existir; falham com mensagem clara
+2. **EAC4 ainda sem dados locais reais.** Nenhuma análise exploratória EAC4
+   real foi executada. Notebooks e `analyze` EAC4 podem ser executados quando a
+   base existir; falham com mensagem clara
    quando ela não existe. Não se incluem mapas simulados com aparência de resultados.
 3. **NetCDF do ADS é experimental.** Variáveis ou coordenadas sem metadados
    suficientes para comprovar nível falham intencionalmente. Prefira GRIB nativo.
@@ -29,8 +36,9 @@
 9. **Zarr local POSIX.** Publicação atômica usa rename no mesmo filesystem.
    Object stores remotos precisam de outro mecanismo de commit. Não há API,
    autenticação web, dashboard ou PostGIS implementados nesta fase.
-10. **Inventário de produtos.** Investigados os três datasets relevantes listados;
-    não prometida indexação de todo o ADS. Operacional não é adquirido/mesclado.
+10. **Inventário de produtos.** A primeira fase investigou três datasets; o CAMS73
+    foi examinado depois, em fluxo próprio. Não se promete indexar todo o ADS;
+    o operacional não é adquirido nem mesclado.
 11. **Atualizações retroativas.** `update` busca novos/ausentes e valida arquivos
     locais. Não substitui automaticamente um mês já validado se o provedor
     reprocessar dados sem mudar seu identificador. Revisões exigem uma política

@@ -1,5 +1,11 @@
 # Fonte e interpretação científica
 
+As seções abaixo registram a investigação inicial da **EAC4** e do produto
+operacional. O metano CAMS73, incorporado depois como fluxo separado, é descrito
+em [CH4_CAM73.md](CH4_CAM73.md). A afirmação de que não havia dados reais
+baixados se refere à EAC4 nessa primeira fase; o arquivo CH4 de setembro de
+2024 foi importado e analisado localmente.
+
 ## Produtos consultados
 
 Consulta direta em 29/09/2026 (UTC), com JSON original preservado em `evidence/`:

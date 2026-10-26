@@ -4,14 +4,23 @@ Infraestrutura científica Python para um arquivo global incremental da reanáli
 CAMS EAC4: ADS → originais GRIB/ZIP → QC → NetCDF4 → Zarr anual → extração,
 estatísticas, mapas e atualização.
 
-**Estado da entrega (30/09/2026):** código implementado e testado localmente;
+**Estado da entrega EAC4 (30/09/2026):** código implementado e testado localmente;
 catálogo, formulários e restrições reais consultados. Cobertura confirmada pelo
 catálogo/constraints: **2003-01 a 2025-12**, 276 meses por variável.
 A tentativa mínima autenticada foi bloqueada **antes de submeter o job** por
-falta de API key. **Nenhum dado observacional/reanalisado foi baixado.** Não há
-mapas ou resultados científicos CAMS prontos; os testes usam fixtures sintéticas.
+falta de API key. **Nenhum dado EAC4 foi baixado.** Os testes EAC4 usam fixtures
+sintéticas.
 O pipeline precisa passar pelos pilotos reais abaixo antes de ser considerado
 validado em produção. Veja [relatório da primeira fase](reports/PHASE1_REPORT.md).
+
+O fluxo separado de metano CAMS73 aceita perfis diários `CH4` em 34 níveis,
+com unidades de fração molar em ar seco. Ele não mistura esses dados com EAC4.
+O exemplo real de setembro de 2024 foi importado, processado e analisado
+localmente. Consulte [o relatório do arquivo e os comandos `camsaq ch4`](docs/CH4_CAM73.md).
+
+Se este é seu primeiro contato com o projeto, siga o [guia completo em linguagem
+simples](../GUIA_COMPLETO.md). A [referência de funções](docs/REFERENCIA_FUNCOES.md)
+explica cada módulo Python; a CLI é o caminho recomendado para começar.
 
 ## Instalação no Ubuntu/Linux
 

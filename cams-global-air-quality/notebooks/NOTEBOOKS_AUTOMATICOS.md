@@ -1,5 +1,11 @@
 # Notebooks CAMS com descoberta automática de cobertura
 
+**Escopo atual:** estes notebooks leem partições mensais **EAC4**. O fluxo
+separado de metano CAMS73 usa `camsaq ch4` e está no
+[guia principal](../../GUIA_COMPLETO.md#24-metano-ch4-passo-a-passo). As
+instruções de instalação da atualização por ZIP abaixo são históricas; quem
+clonou este repositório já tem os arquivos no lugar.
+
 ## Instalação da atualização
 
 Este pacote contém os três notebooks refeitos e o módulo compartilhado
@@ -106,7 +112,8 @@ esse ano fixado. No ambiente correto, na raiz do projeto:
 
 ```bash
 camsaq inventory --start 2003-01 --end 2003-12
-camsaq smoke --kind monthly --start 2003-01 --end 2003-01 --pollutants pm25 co
+camsaq smoke --kind monthly --start 2003-01 --end 2003-01 --pollutants pm25
+camsaq smoke --kind monthly --start 2003-01 --end 2003-01 --pollutants co
 camsaq download-monthly --start 2003-01 --end 2003-12
 camsaq validate
 camsaq process --kind monthly
@@ -115,7 +122,9 @@ camsaq process --kind monthly
 Execute os notebooks 01, 02 e 03. Se já houver outros anos locais, eles também
 serão analisados: o download de teste não apaga nem esconde a cobertura existente.
 `validate` e `process` não têm filtro de ano nessa versão e abrangem o manifesto.
-A variável CO do piloto verifica o ramo de gases em nível de modelo.
+O segundo piloto, apenas com CO, verifica o ramo de gases em nível de modelo.
+`smoke` executa somente a primeira variável da seleção; listar PM2.5 e CO no
+mesmo comando não testaria as duas.
 O projeto requer pilotos válidos antes dos lotes maiores; siga qualquer indicação
 da CLI quanto ao formato e escopo do piloto. Credenciais ficam fora do Git.
 Repita `download-monthly` com o mesmo intervalo para exercitar a retomada; arquivos
