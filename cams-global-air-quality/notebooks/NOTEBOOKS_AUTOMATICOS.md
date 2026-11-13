@@ -1,27 +1,15 @@
 # Notebooks CAMS com descoberta automática de cobertura
 
-**Escopo atual:** estes notebooks leem partições mensais **EAC4**. O fluxo
-separado de metano CAMS73 usa `camsaq ch4` e está no
-[guia principal](../../GUIA_COMPLETO.md#24-metano-ch4-passo-a-passo). As
-instruções de instalação da atualização por ZIP abaixo são históricas; quem
-clonou este repositório já tem os arquivos no lugar.
+Os notebooks **01–03** usam somente partições mensais EAC4, por meio de
+`available_data.py`. Os notebooks **04–06** usam somente partições diárias CH4
+CAMS73, por meio de `available_ch4.py`. Eles não juntam produtos, não baixam
+arquivos e não escrevem nos manifestos.
 
-## Instalação da atualização
+## Preparar o ambiente
 
-Este pacote contém os três notebooks refeitos e o módulo compartilhado
-`notebooks/available_data.py`. Copie os quatro arquivos juntos. Não há alteração
-nos arquivos CAMS, credenciais, manifesto ou configuração do downloader.
-A implementação foi conferida contra `processing.py` do repositório
-paulopimenta6/cams (SHA do arquivo 87a3b01627e0b5f455f07ee7268dacf5452e62d4).
-
-Na raiz do projeto, faça uma cópia de segurança antes de extrair o ZIP:
-
-```bash
-cp -a notebooks "notebooks.backup.$(date +%Y%m%d-%H%M%S)"
-unzip /caminho/para/CAMS_Notebooks_Automaticos.zip -d .
-```
-
-Reinicie o kernel se algum notebook já estiver aberto. Escolha o ambiente Python
+Na raiz de `cams-global-air-quality`, instale o projeto com o extra `notebooks`
+descrito no README. Reinicie o kernel se algum notebook já estiver aberto.
+Escolha o ambiente Python
 em que `cams_air_quality` está instalado e execute todas as células em ordem.
 O kernel indicado nos arquivos é `camsaq`:
 
@@ -34,8 +22,13 @@ python -m ipykernel install --user --name camsaq --display-name 'Python (CAMS Ai
    referência multianual quando possível, anomalias e mapas automáticos.
 3. `03_timeseries_example.ipynb`: ponto mais próximo e recorte regional opcional,
    CSV e metadados, com a cobertura própria de cada variável.
+4. `04_ch4_inventory.ipynb`: meses CH4, checksums, níveis, lacunas e anos completos.
+5. `05_ch4_timeseries.ipynb`: médias diárias, mensais e anuais, ponto, referência e
+   anomalias quando a cobertura permite.
+6. `06_ch4_maps.ipynb`: mapas mensais, anuais, do período, referência, anomalias
+   e desvio padrão; motivos para omissões em `map_manifest.json`.
 
-## O que é descoberto
+## Como os notebooks EAC4 descobrem dados
 
 O manifesto `metadata/downloads.sqlite` é aberto somente para leitura. Selecionam-se
 registros EAC4 mensais do mesmo dataset, área e formato da configuração; o arquivo
@@ -55,7 +48,7 @@ NetCDF e o manifesto correspondentes, precisam restaurar esses componentes antes
  de usar estes notebooks. Caminhos absolutos antigos no manifesto precisam ser
 migrados pelo pipeline, sem editar checksums para forçar aceitação.
 
-## Regras científicas
+## Regras científicas dos notebooks EAC4
 
 - A análise é mensal; não agrega silenciosamente dados subdiários.
 - A varredura de qualidade percorre os chunks e guarda apenas uma fração finita
@@ -91,7 +84,7 @@ Consulte `file_inventory.csv`, `coverage.json`, `monthly_quality.csv`,
 Um notebook pode finalizar tendo erros de uma variável: confira `Falhas: 0`
 e `errors.json`; exceções são exibidas e as outras variáveis continuam.
 
-## Recortes e mapas
+## Recortes e mapas EAC4
 
 Em 02 e 03, `BBOX=None` usa o domínio disponível. Para um recorte:
 
@@ -141,44 +134,36 @@ mkdir -p reports/executed_notebooks
 jupyter nbconvert --to notebook --execute notebooks/01_inventory.ipynb --ExecutePreprocessor.kernel_name=camsaq --ExecutePreprocessor.timeout=3600 --output-dir=reports/executed_notebooks
 jupyter nbconvert --to notebook --execute notebooks/02_global_climatology.ipynb --ExecutePreprocessor.kernel_name=camsaq --ExecutePreprocessor.timeout=3600 --output-dir=reports/executed_notebooks
 jupyter nbconvert --to notebook --execute notebooks/03_timeseries_example.ipynb --ExecutePreprocessor.kernel_name=camsaq --ExecutePreprocessor.timeout=3600 --output-dir=reports/executed_notebooks
+jupyter nbconvert --to notebook --execute notebooks/04_ch4_inventory.ipynb --ExecutePreprocessor.kernel_name=camsaq --ExecutePreprocessor.timeout=3600 --output-dir=reports/executed_notebooks
+jupyter nbconvert --to notebook --execute notebooks/05_ch4_timeseries.ipynb --ExecutePreprocessor.kernel_name=camsaq --ExecutePreprocessor.timeout=3600 --output-dir=reports/executed_notebooks
+jupyter nbconvert --to notebook --execute notebooks/06_ch4_maps.ipynb --ExecutePreprocessor.kernel_name=camsaq --ExecutePreprocessor.timeout=3600 --output-dir=reports/executed_notebooks
 ```
 
 O tempo necessário depende da quantidade de dados: aumentar o timeout não aumenta
-memória. Na Jetson, processe uma variável de cada vez (já é o padrão deste código).
+memória. Em máquinas com pouca memória, processe uma variável de cada vez nos
+notebooks EAC4.
 Configuração alternativa: `export CAMSAQ_CONFIG=/caminho/absoluto/config.yaml`.
 Essa variável seleciona a configuração, sem expor qualquer token.
 
 ## Dependências e reprodutibilidade do ambiente
 
-Mantenha no `pyproject.toml`, em dependencies:
+As dependências científicas e o extra `notebooks` já estão declarados em
+`pyproject.toml`. Instale o projeto como descrito no README; esta ampliação
+não acrescenta bibliotecas. Os comandos `jupyter nbconvert` acima exigem que
+esse executável esteja disponível no ambiente. O harness de teste usa `nbclient`,
+que já faz parte do extra `notebooks`.
 
-```toml
-"zarr>=2.18.7,<3",
-"numcodecs>=0.12,<0.16",
-```
-
-Nos extras de notebooks, mantenha JupyterLab, nbclient, ipykernel e Jinja2;
-acrescente `nbconvert>=7,<8` se quiser os comandos de execução acima.
-Cartopy 0.24 e ecCodes nativo da Jetson também precisam ser documentados no Conda.
-O pacote PyPI `eccodes` (interface Python) não é a mesma distribuição que
-`eccodes` do Conda (biblioteca nativa). Não substitua a versão da interface pela
-versão nativa só porque os nomes coincidem.
-
-Para registrar seu ambiente que passou nos 61 testes, execute na própria Jetson:
+Para registrar um ambiente verificado, execute na própria máquina:
 
 ```bash
 mkdir -p environment-snapshots
-conda list --explicit > environment-snapshots/jetson-conda-explicit.txt
-python -m pip freeze > environment-snapshots/jetson-python-freeze.txt
-python -m eccodes selfcheck > environment-snapshots/jetson-eccodes.txt
+python -m pip freeze > environment-snapshots/python-freeze.txt
+python --version > environment-snapshots/python-version.txt
 ```
 
-O arquivo Conda explícito registra builds nativos e é específico da plataforma;
-o freeze Python não substitui esse arquivo. Não restaure cegamente todo o freeze
-com pip sobre bibliotecas Conda: ele lista também distribuições fornecidas pelo
-Conda e caminhos de instalação editável. Revise caminhos locais antes de versionar.
-Esses snapshots devem ser gerados na sua máquina: não é possível reconstruir
-exatamente seu ambiente a partir de alguns números de versão no chat.
+O freeze registra as versões Python instaladas, mas pode incluir caminhos locais
+e não substitui a documentação de bibliotecas nativas. Revise os arquivos antes
+de publicá-los.
 
 ## Validação desta atualização
 
@@ -188,8 +173,39 @@ Testes pequenos e sintéticos em `notebooks/tests/test_available_data.py`:
 python -m pytest -q notebooks/tests/test_available_data.py
 ```
 
-A execução integral dos notebooks foi exercitada com bases sintéticas, incluindo
-base vazia, meses isolados, um ano completo e dois anos não consecutivos com
-coberturas diferentes por variável. O resumo está em
-`notebooks/tests/notebook_execution_results.json`. Esses testes não comprovam
-credenciais ADS, downloads reais ou desempenho com décadas de dados na Jetson.
+A execução integral de 01–06 pode ser repetida com bases sintéticas temporárias:
+
+```bash
+python notebooks/execute_notebooks.py
+```
+
+O harness inclui CH4 de dois anos completos e bloqueia pedidos de rede nos
+notebooks CH4. Ele gera produtos em um diretório temporário e imprime o resumo;
+não usa `data/`, `metadata/` ou `reports/` reais. Esses testes não comprovam
+credenciais ADS, downloads reais ou desempenho com décadas de dados.
+
+## Como usar os notebooks CH4
+
+Primeiro prepare os meses com `camsaq ch4 download` ou `camsaq ch4 import`,
+seguido de `camsaq ch4 process` se necessário. Os notebooks não fazem essa etapa.
+Em cada notebook CH4, ajuste no topo `LEVEL`, `START`, `END`, `BASELINE_START`,
+`BASELINE_END` e `BBOX`; no 05 e 06 também pode ajustar `LAT` e `LON`.
+`START`/`END` são meses `YYYY-MM`; `BBOX` é `[norte, oeste, sul, leste]`.
+`None` usa toda a cobertura local da release configurada. Um nível é uma camada
+do modelo, não uma altitude fixa nem uma estação.
+
+O inventário 04 grava `inventory.csv`, `coverage.json`, `analysis.json` e
+`errors.json`. O notebook 05 grava séries CSV com `.metadata.json` e os gráficos
+disponíveis. O 06 chama as mesmas funções da análise CLI e grava `analysis.json`,
+`map_manifest.json` e mapas. As saídas ficam em
+`reports/automatic_notebooks/<NOTEBOOK>/<RUN_ID>/` para não misturar execuções.
+Se não houver partição processada e íntegra, o notebook explica qual comando
+prepará-la; `errors.json` fica vazio quando não ocorreu erro de execução.
+
+Mês completo significa todos os dias, uma vez cada. Ano completo exige os 12
+meses. Referência e anomalia exigem ao menos dois anos completos; com cobertura
+menor, os produtos dependentes são omitidos e o motivo é registrado. `BBOX`
+afeta média espacial e mapas; a série pontual usa a célula mais próxima de
+`LAT`/`LON`, inclusive fora desse recorte. Não há interpolação nem tendência
+inferencial. Consulte [o relatório CH4](../docs/CH4_CAM73.md) para a definição
+das escalas e da referência.

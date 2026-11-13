@@ -61,7 +61,7 @@ proveniência dos meses abertos.
 
 | Módulo e função | Papel e resultado |
 |---|---|
-| `config.load_config(path="config/config.yaml")` | Lê YAML, resolve caminhos, cria pastas locais e valida opções básicas; devolve `cfg`. Chame a partir da pasta do pacote ou passe um caminho explícito. |
+| `config.load_config(path="config/config.yaml", create_dirs=True)` | Lê YAML, resolve caminhos, cria pastas locais por padrão e valida opções básicas; devolve `cfg`. `create_dirs=False` permite inspecionar a configuração sem criar pastas, usado pelo dry-run de `clean`. |
 | `catalog.CatalogError` | Exceção para formulário, restrições ou disponibilidade ADS incompatíveis com o pedido. |
 | `catalog._session()` | **Interna:** prepara sessão HTTP com tentativas limitadas para erros transitórios do catálogo. |
 | `catalog.fetch_catalog(cfg, kind, source="EAC4")` | Consulta coleção, formulário e restrições **ao vivo**; salva uma cópia datada por hash em `metadata/catalog/`; devolve `snap`. `kind` é `monthly`/`subdaily` na EAC4 ou `daily_mean` na fonte CH4. |
@@ -91,7 +91,8 @@ proveniência dos meses abertos.
 | `Manifest.connect()` | Contexto de conexão SQLite: confirma a transação se terminar bem, desfaz em caso de erro e fecha a conexão. |
 | `Manifest.add(batch)` | Insere lote ainda não registrado. Se o caminho mudou, exige arquivo com mesmo checksum ou lote anterior sem payload. |
 | `Manifest.get(key)` | Devolve registro do lote como dicionário, ou `None`. |
-| `Manifest.set(key, status, **fields)` | Atualiza estado/campos permitidos e grava evento. Estados: `requested`, `downloading`, `downloaded`, `validated`, `processed`, `failed`. |
+| `Manifest.set(key, status, **fields)` | Atualiza estado/campos permitidos e grava evento. Estados: `requested`, `downloading`, `downloaded`, `validated`, `processed`, `failed`, `cleaned`. |
+| `Manifest.event(key, status, detail)` | Registra evento sem mudar o estado da linha; `raw_removed` identifica bruto removido com derivado íntegro. |
 | `Manifest.rows()` | Devolve registros ordenados por ano, mês e variável. |
 | `Manifest.intact(row)` | Retorna `True` somente para original validado/processado cujo caminho, tamanho e SHA-256 conferem. Recebe um registro existente. |
 | `validation.open_raw(path, interim, chunks=None, netcdf_engine="h5netcdf")` | Contexto de leitura de GRIB, NetCDF ou ZIP seguro; preserva o original e fecha recursos ao sair. |
@@ -187,8 +188,9 @@ de pedido exigem mês explícito para evitar download involuntário em massa.
 | `import_file(cfg, source)` | Valida NetCDF local com nome CAMS73, confere SHA-256, copia para `data/raw/ghg_inversion/` e registra proveniência; devolve `(batch, qc)`. Não executa processamento quando chamada diretamente em Python. |
 | `process_batch(cfg, batch)` | Exige original íntegro e QC, preserva os 34 níveis e auxiliares verticais em NetCDF4, registra versão efetiva e checksum; devolve caminho. |
 | `consolidate(cfg, version="v25r1", observations="first_guess")` | Publica Zarr anual e `index.json` da versão efetiva. Aceita ano parcial, mas recusa meses duplicados ou derivados corrompidos. |
-| `open_processed(cfg, version="v25r1", observations="first_guess")` | Contexto que abre as partições NetCDF verificadas; fornece `(ds, rows)`. A análise CH4 lê essas partições, não depende de abrir o Zarr. |
-| `analyze(cfg, level, output, version="v25r1", observations="first_guess", lat=-23.5505, lon=-46.6333, bbox=None, maps=True)` | Exige nível explícito; salva médias espaciais diárias, médias de meses completos, série da célula mais próxima, mapas e `analysis.json`; devolve relatório. `bbox` limita média/mapas, não muda o ponto. |
+| `processed_rows(cfg, version="v25r1", observations="first_guess", start=None, end=None)` | Lê o manifesto CH4 sem escrita; filtra meses inclusivos **antes** de conferir SHA-256 e recusa duplicidade. Devolve linhas verificadas. |
+| `open_processed(cfg, version="v25r1", observations="first_guess", start=None, end=None)` | Contexto que abre apenas partições NetCDF verificadas do intervalo; fornece `(ds, rows)`. Não depende do Zarr. |
+| `analyze(cfg, level, output, ..., start=None, end=None, date=None, map_families=None, baseline_start=None, baseline_end=None, scale="shared")` | Exige nível explícito; seleciona dias/meses, gera séries, campos e `analysis.json` versão 2. `bbox` limita médias espaciais/mapas, sem mudar o ponto. `maps=False` desativa PNGs. |
 | `download(cfg, batches, client=None)` | Baixa/valida/processa os lotes preparados e para na primeira falha; devolve lista de resultados. Na CLI, `ch4 download` também chama `consolidate()`. |
 
 Ao chamar `import_file()` diretamente em Python, complete o fluxo assim:
@@ -221,7 +223,7 @@ e coeficientes híbridos necessários para localizar os níveis.
 | `_grid_check(ds, cfg, failures)` | Confere dimensões, ordem, espaçamento e centros da grade CH4. |
 | `_inspect_ch4(ds, batch, cfg)` | Examina identidade, tempo, níveis, auxiliares e valores; monta QC. |
 | `_release(row)` | Lê a versão efetiva do registro de QC. |
-| `_processed_rows(cfg, version, observations)` | Seleciona partições verificadas por versão/observações e recusa duplicidade. |
+| `_month_bounds(start, end)` | Valida limites mensais inclusivos. |
 | `_store_root(cfg, version, observations)` | Calcula pasta do Zarr CH4. |
 
 ## Funções dos notebooks automáticos EAC4
@@ -246,3 +248,43 @@ Os notebooks 01–03 são a forma recomendada de chamar esse auxiliar. O
 [guia dos notebooks](../notebooks/NOTEBOOKS_AUTOMATICOS.md) explica como
 executá-los e interpretar meses ausentes.
 Os notebooks não transformam CH4 em poluente EAC4.
+
+## Estatísticas CH4 e limpeza
+
+As funções abaixo pertencem a `ghg_inversion.py` e operam em séries diárias de
+**uma camada CH4** em ppb. Elas não usam as rotinas mensais EAC4. `monthly_field`,
+`annual_field` e `period_field` fazem médias sobre os dias disponíveis; o chamador
+deve usar `complete_months`/`complete_years` antes de publicar meses ou anos.
+
+| Função | Papel |
+|---|---|
+| `complete_months(a)` | Meses com todos os dias, exatamente uma vez. |
+| `complete_years(months)` | Anos com 12 meses completos. |
+| `monthly_field(a, period)` / `annual_field(a, year)` / `period_field(a)` | Campos médios de mês, ano e intervalo. |
+| `std_field(a)` | Desvio padrão temporal populacional (`ddof=0`) dos dias disponíveis. |
+| `monthly_series(a)` / `annual_series(a)` | Séries de médias completas, sem preencher lacunas. |
+| `reference_cycle(a, years)` | Média, por mês calendário, das médias mensais de ao menos dois anos completos; peso igual por ano. |
+| `anomaly_field(field, reference)` / `anomaly_series(a, reference)` | Diferença em ppb contra a referência mensal correspondente. |
+
+`cleanup.resolve_targets(cfg, scopes, product)` devolve a lista de caminhos,
+tipos e bytes planejados, sem mudar arquivos. `cleanup.clean(cfg, scopes,
+product, execute, force=False, manifest_backup=True)` devolve resumo de itens,
+bytes, exclusões, omissões, backups e erros; `execute=False` é dry-run.
+`cleanup.reconcile_manifest(cfg, product, removed_kinds)` ajusta o manifesto
+após excluir brutos ou derivados. A CLI `camsaq clean` valida os escopos e só
+passa `execute=True` com `--yes`. `everything` exige `--yes`.
+
+## Auxiliar dos notebooks CH4
+
+`notebooks/available_ch4.py` é independente de `available_data.py`. Todas as
+leituras do manifesto CH4 são somente para leitura; nenhum helper baixa dados.
+
+| Função | Papel |
+|---|---|
+| `inventory(cfg, version=None, observations="first_guess")` | Devolve linhas processadas elegíveis e tabela de estado, caminho, checksum, dias, níveis e completude. |
+| `open_level(cfg, level, version=None, start=None, end=None)` | Contexto `(ds_level, rows, provenance)` para uma camada e meses verificados. |
+| `coverage(rows)` | Meses/anos completos, lacunas e meses faltantes para anual. |
+| `global_series(ds_level, area=None)` / `point_series(ds_level, lat, lon)` | Média diária ponderada por área e célula mais próxima. |
+| `monthly_series`, `annual_series`, `reference_cycle`, `anomaly_series`, `temporal_std` | Chamadas CH4 às mesmas regras estatísticas da análise CLI. |
+| `map_field(field, path, title, vmin=None, vmax=None)` | Renderiza um campo 2D usando `maps.plot_map`. |
+| `selected_area(ds_level, bbox=None)` | Aplica o mesmo retângulo a CH4 e às áreas das células. |

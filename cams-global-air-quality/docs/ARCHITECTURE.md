@@ -31,6 +31,12 @@ flowchart TD
   intervalos completos, NaN/Inf, identidades e relatórios PASS/WARNING/FAIL.
 - `units.py` e `metadata.py`: conversões e rastreabilidade explícitas.
 - `processing.py`: derivados NetCDF e gerações imutáveis de Zarr; índice transacional.
+- `ghg_inversion.py`: partições diárias CH4, seleção de meses antes da leitura,
+  estatísticas de uma camada e análise com cobertura e referência explícitas.
+- `cleanup.py`: descobre somente saídas geradas conhecidas, calcula bytes, confere
+  locks e índices Zarr, cria backup SQLite e reconcilia o manifesto após exclusão.
+- `notebooks/available_ch4.py`: leitura CH4 de partições verificadas para os
+  notebooks 04–06, sem download ou escrita no manifesto.
 - `extraction.py`, `statistics.py`, `maps.py`, `analysis.py`: consumidores independentes
   do mecanismo de aquisição, preparados para uso posterior por uma API.
 
@@ -55,6 +61,13 @@ data/processed/ghg_inversion/ch4/first_guess/{resolved-release}/daily_mean/zarr/
     {year}-{content-generation}.zarr
     index.json
 metadata/ghg_inversion/downloads.sqlite
+reports/ch4_inversion*/
+    area_daily.csv, area_monthly.csv, point_daily.csv
+    area_annual.csv, area_climatology.csv, area_anomaly_*.csv (quando aplicável)
+    latest_*.png, day_*.png, month_*.png, annual_*.png
+    period_*.png, climatology_*.png, anomaly_*.png, std_*.png
+    analysis.json
+reports/automatic_notebooks/{04_ch4_inventory,05_ch4_timeseries,06_ch4_maps}/<run-id>/
 ```
 
 Na importação de um arquivo local, o pedido registrado é **reconstruído** a
@@ -63,6 +76,15 @@ O CH4 mantém os 34 níveis; a versão do derivado vem do atributo `release` do
 NetCDF, mesmo se a seleção solicitada era `latest`. A análise CH4 abre partições
 NetCDF conferidas pelo manifesto. O Zarr CH4 é um produto adicional indexado
 por ano e versão. Ele não é anexado ao Zarr EAC4.
+`analyze` abre apenas os meses filtrados por `--start`/`--end` e a camada
+solicitada; uma referência fora desse intervalo é aberta separadamente.
+`analysis.json` registra cobertura, anos completos, referência, mapas e escalas.
+
+`clean` faz prévia por padrão. A exclusão requer `--yes`; `all` não inclui brutos
+nem manifestos, enquanto `everything` os inclui com backup SQLite
+por padrão. Ao remover derivados, o manifesto volta a `validated` somente se o
+bruto conferir por SHA-256. A leitura dos notebooks permanece independente da
+remoção e não altera o manifesto.
 
 Originais nunca são substituídos por conversões. Um payload corrompido ou com
 checksum alterado é preservado com sufixo `.corrupt-*`. Não é sobrescrito um

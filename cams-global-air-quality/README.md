@@ -17,6 +17,10 @@ O fluxo separado de metano CAMS73 aceita perfis diários `CH4` em 34 níveis,
 com unidades de fração molar em ar seco. Ele não mistura esses dados com EAC4.
 O exemplo real de setembro de 2024 foi importado, processado e analisado
 localmente. Consulte [o relatório do arquivo e os comandos `camsaq ch4`](docs/CH4_CAM73.md).
+Para escolher meses, dias e famílias de mapas, use `camsaq ch4 analyze --help`.
+`camsaq clean --scope reports` mostra uma prévia segura da limpeza; `--yes` é
+necessário para apagar. Os notebooks 04–06 apresentam inventário, séries e mapas
+CH4 sem solicitar dados ao ADS. Veja o [guia dos notebooks](notebooks/NOTEBOOKS_AUTOMATICOS.md).
 
 Se este é seu primeiro contato com o projeto, siga o [guia completo em linguagem
 simples](../GUIA_COMPLETO.md). A [referência de funções](docs/REFERENCIA_FUNCOES.md)
@@ -228,12 +232,12 @@ with open_database(cfg) as ds:
 - `src/cams_air_quality/`: catálogo, requests, manifesto, downloader, QC, unidades,
   processamento, extração, estatísticas, mapas, análise e CLI.
 - `config/`: variáveis centralizadas, diretórios, datas, chunks, retry, concorrência.
-- `evidence/`: respostas oficiais preservadas para auditoria; não substituem
-  consulta ao vivo em downloads. `inventory/plan --offline-evidence evidence`
-  serve exclusivamente à reprodução do diagnóstico histórico.
+- `evidence/`: destino opcional de snapshots ADS. Este checkout não contém os
+  JSON históricos; os testes criam snapshots **sintéticos** em `/tmp`.
+  `--offline-evidence` só funciona após fornecer os três JSON do produto.
 - `tests/`: sem autenticação e sem grandes downloads; GRIB sintético com ecCodes,
   NetCDF, ZIP, Zarr, HTTP mockado, mudanças no catálogo e falhas simuladas.
-- `notebooks/`: inventário, climatologia/mapas e extração de São Paulo.
+- `notebooks/`: inventário, séries e mapas EAC4 (01–03) e CH4 (04–06).
 - `docs/`: fontes, decisões científicas, esquema e operação.
 - `reports/`: resultados verificáveis desta primeira fase.
 - `data/`, `logs/`, credenciais, arquivos temporários e banco de controle não entram no Git.

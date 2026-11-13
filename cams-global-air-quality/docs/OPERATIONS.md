@@ -14,7 +14,9 @@ própria abaixo: são outro produto, outro manifesto e outros comandos.
 7. `camsaq analyze --baseline-start ... --baseline-end ...`.
 8. Atualizações subsequentes: `python -m cams_air_quality update`.
 
-Para repetir a leitura dos snapshots incluídos sem dependência de rede:
+Se você possui os três snapshots JSON de uma consulta anterior, pode lê-los
+sem rede. O diretório `evidence/` deste checkout está vazio; os testes criam
+fixtures sintéticas temporárias e não usam esses comandos:
 
 ```bash
 camsaq inventory --offline-evidence evidence
@@ -71,6 +73,7 @@ workers sem reprojetar explicitamente política de serviço e integração.
 
 A criação de Zarr anual reescreve apenas o ano alterado e mantém gerações antigas.
 Planeje limpeza manual após validar backups; o pipeline não apaga dados bons.
+O comando `camsaq clean` descrito abaixo executa exclusões somente com `--yes`.
 NetCDF bruto convertido do ZIP permanece no cache `interim/unpacked` para
 reutilização. Alterar chunks ou versão do código pode gerar novos derivados.
 
@@ -102,3 +105,48 @@ um nível: `camsaq ch4 analyze --level 1 --version v25r1`. A versão é a **rele
 efetiva** encontrada no NetCDF, mesmo quando o arquivo de entrada tinha `latest`
 no nome. Não programe o mesmo mês pelos caminhos importação e download sem
 revisar duplicidade de lotes. Consulte o [passo a passo](../../GUIA_COMPLETO.md#24-metano-ch4-passo-a-passo).
+
+### Análise por período
+
+```bash
+camsaq ch4 analyze --level 1 --start 2023-01 --end 2023-04 \
+  --maps monthly,period,std --scale shared
+camsaq ch4 analyze --level 1 --start 2022-01 --end 2023-12 \
+  --baseline-start 2022-01 --baseline-end 2023-12 \
+  --maps annual,climatology,anomaly
+```
+
+`--maps annual` publica apenas anos com 12 meses diários completos. Referência
+e anomalia exigem ao menos dois anos completos. Veja cobertura e omissões em
+`analysis.json`; não interprete um ano parcial como média anual.
+
+## Limpeza explícita
+
+`camsaq clean` **não apaga nada sem `--yes`**. Faça primeiro uma prévia:
+
+```bash
+camsaq clean --scope reports --scope tmp
+camsaq clean --scope processed --product ch4 --json
+camsaq clean --scope zarr-stale --yes
+```
+
+`--scope all` inclui relatórios gerados conhecidos, temporários, logs, catálogo,
+cache, intermediários e processados; **não** inclui brutos ou manifestos.
+`--scope everything --yes` inclui também brutos e manifestos. `--product ch4`
+ou `eac4` filtra `raw`, `processed` e `manifest`; os outros escopos são comuns.
+`--scope all` e `everything` não podem ser combinados com outro escopo.
+
+Os escopos individuais são `reports`, `interim`, `processed`, `raw`, `manifest`,
+`zarr-stale`, `tmp`, `logs`, `catalog` e `cache`. `reports` preserva Markdown e
+arquivos rastreados pelo Git. `zarr-stale` confere o índice e conserva a geração
+ativa; um caminho ativo ausente bloqueia a limpeza daquele produto. Locks ativos
+bloqueiam remoções de dados, salvo escolha explícita `--force`; locks detidos
+continuam protegidos no escopo `tmp`.
+
+Ao limpar `processed` com bruto íntegro, o manifesto retorna a `validated` e
+`camsaq ch4 process` reconstrói o derivado CH4. Ao limpar bruto e derivado, a
+linha passa a `cleaned` e `validate` a omite. Se só o bruto foi apagado mas o
+derivado continua íntegro, a análise segue possível e `validate` informa
+`raw_missing_processed_intact`. O escopo `manifest` cria
+`downloads.sqlite.bak-<data UTC>` por padrão; `--no-manifest-backup` desativa
+essa proteção. Guarde backups fora da máquina antes de uma limpeza ampla.

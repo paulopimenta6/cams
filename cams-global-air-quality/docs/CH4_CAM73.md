@@ -149,3 +149,64 @@ derivado retornou 1.898,9137 ppb para a média global de setembro na camada 1,
 e 2.159,8999 ppb para a célula mais próxima de São Paulo, em acordo com a
 leitura direta do original. O planejamento foi confirmado no catálogo ADS ao
 vivo para a combinação de setembro de 2024 e `v25r1`.
+
+## Análise por período e famílias de mapas
+
+`--start` e `--end` selecionam meses inclusivos **antes** de abrir os derivados.
+Sem esses parâmetros, a análise usa todos os meses processados da release.
+`--date` escolhe um dia exato e não pode ser combinado com `--start` ou `--end`.
+Um dia ausente causa erro com os limites disponíveis. Por exemplo:
+
+```bash
+camsaq ch4 analyze --level 1 --start 2023-01 --end 2023-04 \
+  --maps monthly,period,std --output reports/ch4_inversion_2023
+camsaq ch4 analyze --level 1 --date 2023-04-15 --output reports/ch4_dia
+camsaq ch4 analyze --level 1 --start 2022-01 --end 2023-12 \
+  --baseline-start 2022-01 --baseline-end 2023-12 --maps all \
+  --output reports/ch4_inversion_2022_2023
+```
+
+As famílias aceitas por `--maps` são `latest`, `day`, `monthly`, `annual`,
+`period`, `climatology`, `anomaly`, `std` e `all`. O padrão é `latest`; com
+`--date`, o padrão é somente `day`. `all` inclui todas exceto `latest`. O
+parâmetro `--no-maps` ainda gera CSVs e `analysis.json`. `--scale shared`
+(padrão) usa uma escala por família, comparável entre mapas; `per-map` calcula
+uma escala individual. As faixas usam os percentis 2 e 98; anomalias usam limites
+simétricos. A escala antiga de `latest` continua registrada em `map_color_scale`.
+
+Um mês é completo quando contém cada dia exatamente uma vez. Uma média anual só
+existe com os 12 meses completos. A média do período pesa igualmente cada dia
+disponível e registra os dias faltantes. A referência mensal usa a média das
+médias mensais de **pelo menos dois anos completos**, com o mesmo peso para cada
+ano. A anomalia subtrai a referência do mesmo mês. Para a anomalia anual, as
+referências mensais são ponderadas pelos dias de cada mês do ano analisado,
+inclusive em ano bissexto. `std` é o desvio padrão populacional (`ddof=0`) dos
+dias disponíveis. Não há interpolação nem tendência inferencial.
+
+`--maps anomaly` exige os dois limites da referência. Com `--maps all`, a
+ausência ou insuficiência de referência aparece em `skipped`, permitindo gerar
+as outras famílias. `analysis.json` versão 2 registra seleção, cobertura,
+referência, mapas, escalas e motivos das omissões. Os CSVs `area_annual`,
+`area_climatology` e `area_anomaly_*` surgem somente quando aplicáveis, sempre
+com `.metadata.json`.
+
+## Notebooks e limpeza
+
+Os notebooks `04_ch4_inventory`, `05_ch4_timeseries` e `06_ch4_maps` leem apenas
+partições processadas CH4 com SHA-256 válido. Ajuste `LEVEL`, `START`, `END`,
+`BASELINE_START`, `BASELINE_END` e `BBOX` nas primeiras células. As saídas vão
+para `reports/automatic_notebooks/<notebook>/<execução UTC>/`; nenhum notebook
+baixa dados ou escreve no manifesto.
+
+Antes de liberar espaço, confira a prévia:
+
+```bash
+camsaq clean --scope processed --product ch4
+camsaq clean --scope processed --product ch4 --yes
+```
+
+O segundo comando apaga os derivados CH4, preserva o bruto e marca as linhas
+correspondentes como `validated`; `camsaq ch4 process` pode reconstruí-los.
+`--scope raw` remove originais; `--scope everything --yes` também remove o
+manifesto e cria um backup SQLite por padrão. A limpeza não é feita
+automaticamente pelos comandos de análise. Veja [Operação](OPERATIONS.md).

@@ -3,14 +3,15 @@ from pathlib import Path
 import yaml
 
 
-def load_config(path="config/config.yaml"):
+def load_config(path="config/config.yaml", create_dirs=True):
     path = Path(path).resolve()
     with path.open() as f:
         cfg = yaml.safe_load(f)
     cfg["root"] = str((path.parent / cfg["root"]).resolve())
     for key in ("data_dir", "metadata_dir", "log_dir"):
         cfg[key] = str((Path(cfg["root"]) / cfg[key]).resolve())
-        Path(cfg[key]).mkdir(parents=True, exist_ok=True)
+        if create_dirs:
+            Path(cfg[key]).mkdir(parents=True, exist_ok=True)
     with (path.parent / cfg["pollutants_file"]).open() as f:
         cfg["registry"] = yaml.safe_load(f)["pollutants"]
     if not 1 <= cfg["workers"] <= 4:

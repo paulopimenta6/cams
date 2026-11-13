@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import numpy as np
@@ -9,6 +10,41 @@ from cams_air_quality.catalog import load_snapshot
 from cams_air_quality.config import load_config
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _synthetic_snapshot(tmp_path, cfg, kind):
+    """Create a tiny ADS-shaped catalog in tmp_path; never use missing real evidence."""
+    years = [str(year) for year in range(2003, 2026)]
+    months = [f"{month:02d}" for month in range(1, 13)]
+    times = [f"{hour:02d}:00" for hour in range(0, 24, 3)]
+    variables = [spec["cams_variable"] for spec in cfg["registry"].values()]
+    fields = {"variable": variables, "data_format": ["grib", "netcdf_zip"],
+              "model_level": ["60"], "time": ["00:00"] if kind == "monthly" else times}
+    if kind == "monthly":
+        fields.update(year=years, month=months, product_type=["monthly_mean"])
+    form = [{"name": name, "details": {"values": values}}
+            for name, values in fields.items()]
+    constraints = []
+    for name, spec in cfg["registry"].items():
+        row = {"variable": [spec["cams_variable"]],
+               "time": ["00:00"] if kind == "monthly" else times}
+        if spec["level_type"] == "model":
+            row["model_level"] = [str(spec["level"])]
+        if kind == "monthly":
+            row.update(year=years, month=months, product_type=["monthly_mean"])
+        else:
+            row["date"] = ["2003-01-01/2025-12-31"]
+        constraints.append(row)
+    collection = {"id": cfg["sources"]["EAC4"][kind],
+                  "extent": {"temporal": {"interval": [[
+                      "2003-01-01T00:00:00Z", "2025-12-31T00:00:00Z"
+                  ]]}}}
+    directory = tmp_path / f"synthetic-{kind}-evidence"
+    directory.mkdir()
+    for name, data in (("collection", collection), ("form", form),
+                       ("constraints", constraints)):
+        (directory / f"{kind}.{name}.json").write_text(json.dumps(data), encoding="utf-8")
+    return load_snapshot(directory, kind)
 
 
 @pytest.fixture
@@ -32,13 +68,13 @@ def cfg(tmp_path):
 
 
 @pytest.fixture
-def snap():
-    return load_snapshot(ROOT / "evidence", "monthly")
+def snap(tmp_path, cfg):
+    return _synthetic_snapshot(tmp_path, cfg, "monthly")
 
 
 @pytest.fixture
-def subdaily():
-    return load_snapshot(ROOT / "evidence", "subdaily")
+def subdaily(tmp_path, cfg):
+    return _synthetic_snapshot(tmp_path, cfg, "subdaily")
 
 
 def dataset(name="pm2p5", units="kg m**-3", times=None, level=None):

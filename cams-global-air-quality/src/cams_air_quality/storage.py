@@ -117,6 +117,7 @@ class Manifest:
             "validated",
             "failed",
             "processed",
+            "cleaned",
         }:
             raise ValueError(status)
         fields.update(status=status, updated_at=now())
@@ -135,6 +136,14 @@ class Manifest:
             return [
                 dict(r) for r in c.execute("SELECT * FROM downloads ORDER BY year,month,variable")
             ]
+
+    def event(self, key, status, detail):
+        """Record a lifecycle event without changing the row status."""
+        with self.connect() as c:
+            c.execute(
+                "INSERT INTO events (key,timestamp,status,detail) VALUES (?,?,?,?)",
+                (key, now(), status, json.dumps(detail)),
+            )
 
     def intact(self, row):
         p = Path(row["filepath"])

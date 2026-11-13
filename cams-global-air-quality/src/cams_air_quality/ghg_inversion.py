@@ -2,12 +2,15 @@
 
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
+import sqlite3
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Iterator
 
 import dask
 import numpy as np
@@ -27,6 +30,7 @@ SOURCE = "GHG_INVERSION"
 DATASET = "cams-global-greenhouse-gas-inversion"
 FILE_RE = re.compile(r"cams73_(latest|v\d+r\d+)_ch4_conc_first_guess_dm_(\d{6})\.nc$")
 SAMPLE_MONTH_BYTES = 536_685_448  # The inspected 30-day September 2024 file.
+LOG = logging.getLogger("camsaq.ch4")
 
 
 def source_config(cfg):
@@ -271,14 +275,25 @@ def _release(row):
     return json.loads(row.get("qc_json") or "{}").get("resolved_release")
 
 
-def _processed_rows(cfg, version, observations="first_guess"):
+def processed_rows(cfg: dict, version: str = "v25r1", observations: str = "first_guess",
+                   start: str | None = None, end: str | None = None) -> list[dict]:
+    """Read verified CH4 partitions in a month range without changing the manifest."""
+    first, last = _month_bounds(start, end)
+    database = Path(source_config(cfg)["metadata_dir"]) / "downloads.sqlite"
+    if not database.is_file():
+        return []
+    with sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True) as conn:
+        conn.row_factory = sqlite3.Row
+        all_rows = [dict(row) for row in conn.execute("SELECT * FROM downloads")]
     rows = [
         row
-        for row in manifest(cfg).rows()
+        for row in all_rows
         if row["status"] == "processed"
         and row["dataset"] == DATASET
         and _release(row) == version
         and json.loads(row["api_request"])["input_observations"] == [observations]
+        and (first is None or (row["year"], row["month"]) >= (first.year, first.month))
+        and (last is None or (row["year"], row["month"]) <= (last.year, last.month))
     ]
     for row in rows:
         path = Path(row["processed_path"] or "")
@@ -287,6 +302,35 @@ def _processed_rows(cfg, version, observations="first_guess"):
     if len({(r["year"], r["month"]) for r in rows}) != len(rows):
         raise ValueError("Duplicate processed CH4 months for one release")
     return rows
+
+
+def _month_bounds(start, end):
+    def parse(value):
+        if value is None:
+            return None
+        if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", str(value)):
+            raise ValueError(f"Invalid month {value!r}; expected YYYY-MM")
+        return pd.Period(value, freq="M")
+
+    first, last = parse(start), parse(end)
+    if first is not None and last is not None and first > last:
+        raise ValueError("start must not be after end")
+    return first, last
+
+
+def _available_day_range(cfg, version):
+    database = Path(source_config(cfg)["metadata_dir"]) / "downloads.sqlite"
+    if not database.is_file():
+        return None
+    with sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True) as conn:
+        rows = conn.execute(
+            "SELECT year,month,qc_json FROM downloads WHERE status='processed'"
+        ).fetchall()
+    periods = sorted(pd.Period(f"{year}-{month:02d}", freq="M")
+                     for year, month, qc in rows
+                     if json.loads(qc or "{}").get("resolved_release") == version)
+    return (periods[0].start_time.date(), periods[-1].end_time.date(),
+            {str(period) for period in periods}) if periods else None
 
 
 def process_batch(cfg, batch):
@@ -313,6 +357,8 @@ def process_batch(cfg, batch):
             and row.get("processed_path") == str(output)
             and row.get("processed_checksum") == sha256(output)
         ):
+            if row["status"] != "processed":
+                m.set(batch.key, "processed", processing_error=None)
             return output
         with open_raw(
             batch.filepath,
@@ -373,10 +419,13 @@ def process_batch(cfg, batch):
             with dask.config.set(scheduler="synchronous"):
                 out.to_netcdf(temp, engine=cfg["netcdf_engine"], encoding=encoding)
         with xr.open_dataset(temp, engine=cfg["netcdf_engine"]) as check:
-            if check.ch4.sizes != {"time": pd.Period(f"{batch.year}-{batch.month:02d}").days_in_month,
-                                   "level": cfg["ghg_inversion"]["levels"],
-                                   "latitude": cfg["ghg_inversion"]["grid"]["latitude"],
-                                   "longitude": cfg["ghg_inversion"]["grid"]["longitude"]}:
+            expected_sizes = {
+                "time": pd.Period(f"{batch.year}-{batch.month:02d}").days_in_month,
+                "level": cfg["ghg_inversion"]["levels"],
+                "latitude": cfg["ghg_inversion"]["grid"]["latitude"],
+                "longitude": cfg["ghg_inversion"]["grid"]["longitude"],
+            }
+            if check.ch4.sizes != expected_sizes:
                 raise ValueError("Processed CH4 dimensions changed")
             if not np.isfinite(check.ch4.isel(time=0, level=0)).all().item():
                 raise ValueError("Processed CH4 first field is not finite")
@@ -386,11 +435,12 @@ def process_batch(cfg, batch):
 
 
 def _store_root(cfg, version, observations="first_guess"):
-    return Path(cfg["data_dir"]) / "processed/ghg_inversion/ch4" / observations / version / "daily_mean/zarr"
+    return (Path(cfg["data_dir"]) / "processed/ghg_inversion/ch4" / observations
+            / version / "daily_mean/zarr")
 
 
 def consolidate(cfg, version="v25r1", observations="first_guess"):
-    rows = _processed_rows(cfg, version, observations)
+    rows = processed_rows(cfg, version, observations)
     if not rows:
         raise ValueError("No processed CH4 months for this release")
     root = _store_root(cfg, version, observations)
@@ -401,7 +451,8 @@ def consolidate(cfg, version="v25r1", observations="first_guess"):
                  "updated_at": now(), "years": {}}
         for year in sorted({r["year"] for r in rows}):
             subset = sorted((r for r in rows if r["year"] == year), key=lambda r: r["month"])
-            digest = hashlib.sha256(json.dumps([(r["key"], r["processed_checksum"]) for r in subset]).encode()).hexdigest()[:16]
+            payload = json.dumps([(r["key"], r["processed_checksum"]) for r in subset])
+            digest = hashlib.sha256(payload.encode()).hexdigest()[:16]
             name = f"{year}-{digest}.zarr"
             target = root / name
             if not target.exists():
@@ -430,85 +481,446 @@ def consolidate(cfg, version="v25r1", observations="first_guess"):
 
 
 @contextmanager
-def open_processed(cfg, version="v25r1", observations="first_guess"):
-    rows = sorted(_processed_rows(cfg, version, observations), key=lambda r: (r["year"], r["month"]))
+def open_processed(cfg: dict, version: str = "v25r1", observations: str = "first_guess",
+                   start: str | None = None,
+                   end: str | None = None) -> Iterator[tuple[xr.Dataset, list[dict]]]:
+    rows = sorted(
+        processed_rows(cfg, version, observations, start, end),
+        key=lambda r: (r["year"], r["month"]),
+    )
     if not rows:
         raise ValueError("No verified processed CH4 files for this release")
-    with xr.open_mfdataset([r["processed_path"] for r in rows], engine=cfg["netcdf_engine"],
-                           combine="by_coords", chunks=cfg["ghg_inversion"]["chunks"],
-                           data_vars="minimal", coords="minimal", compat="equals", join="exact") as ds:
+    chunks = {**cfg["ghg_inversion"]["chunks"],
+              "time": max(31, cfg["ghg_inversion"]["chunks"].get("time", 1))}
+    with xr.open_mfdataset(
+        [r["processed_path"] for r in rows], engine=cfg["netcdf_engine"],
+        combine="by_coords", chunks=chunks, data_vars="minimal", coords="minimal",
+        compat="equals", join="exact",
+    ) as ds:
         yield ds, rows
 
 
-def analyze(cfg, level, output, version="v25r1", observations="first_guess",
-            lat=-23.5505, lon=-46.6333, bbox=None, maps=True):
-    output = Path(output)
-    output.mkdir(parents=True, exist_ok=True)
-    with open_processed(cfg, version, observations) as (ds, rows):
+def complete_months(a: xr.DataArray) -> list[pd.Period]:
+    """Return months with every daily timestamp exactly once."""
+    times = pd.DatetimeIndex(a.time.values)
+    return [
+        period
+        for period in sorted(set(times.to_period("M")))
+        if times[times.to_period("M") == period].equals(
+            pd.date_range(period.start_time, periods=period.days_in_month, freq="D")
+        )
+    ]
+
+
+def complete_years(months: list[pd.Period]) -> list[int]:
+    """Return calendar years containing twelve complete months."""
+    return [
+        year for year in sorted({p.year for p in months})
+        if {p.month for p in months if p.year == year} == set(range(1, 13))
+    ]
+
+
+def monthly_field(a: xr.DataArray, period: pd.Period) -> xr.DataArray:
+    return a.sel(time=str(period)).mean("time", keep_attrs=True)
+
+
+def annual_field(a: xr.DataArray, year: int) -> xr.DataArray:
+    return a.sel(time=str(year)).mean("time", keep_attrs=True)
+
+
+def period_field(a: xr.DataArray) -> xr.DataArray:
+    return a.mean("time", keep_attrs=True)
+
+
+def std_field(a: xr.DataArray) -> xr.DataArray:
+    """Population standard deviation over available daily means (ddof=0)."""
+    return a.std("time", ddof=0, keep_attrs=True)
+
+
+def monthly_series(a: xr.DataArray) -> xr.DataArray:
+    parts = [monthly_field(a, p).expand_dims(time=[p.start_time]) for p in complete_months(a)]
+    return xr.concat(parts, dim="time") if parts else a.isel(time=slice(0, 0))
+
+
+def annual_series(a: xr.DataArray) -> xr.DataArray:
+    years = complete_years(complete_months(a))
+    parts = [annual_field(a, y).expand_dims(time=[pd.Timestamp(y, 1, 1)]) for y in years]
+    return xr.concat(parts, dim="time") if parts else a.isel(time=slice(0, 0))
+
+
+def reference_cycle(a: xr.DataArray, years: list[int]) -> xr.DataArray:
+    """Equal weight per complete reference year within each calendar month."""
+    if len(years) < 2 or not set(years) <= set(complete_years(complete_months(a))):
+        raise ValueError("Reference requires at least two complete calendar years")
+    fields = []
+    for month in range(1, 13):
+        yearly = [monthly_field(a, pd.Period(f"{year}-{month:02d}", freq="M"))
+                  for year in years]
+        fields.append(xr.concat(yearly, dim="reference_year").mean(
+            "reference_year", keep_attrs=True
+        ).expand_dims(month=[month]))
+    return xr.concat(fields, dim="month")
+
+
+def anomaly_field(field: xr.DataArray, reference: xr.DataArray) -> xr.DataArray:
+    result = field - reference
+    result.attrs = {**field.attrs, "units": "ppb", "statistic": "CH4 anomaly"}
+    return result
+
+
+def anomaly_series(a: xr.DataArray, reference: xr.DataArray) -> xr.DataArray:
+    monthly = monthly_series(a)
+    return monthly.groupby("time.month") - reference
+
+
+def _annual_reference(reference: xr.DataArray, year: int) -> xr.DataArray:
+    days = xr.DataArray(
+        [pd.Period(f"{year}-{m:02d}", freq="M").days_in_month for m in range(1, 13)],
+        dims="month", coords={"month": range(1, 13)},
+    )
+    return reference.weighted(days).mean("month", keep_attrs=True)
+
+
+def _coverage(a, start=None, end=None, date=None):
+    times = pd.DatetimeIndex(a.time.values)
+    if date:
+        expected = pd.DatetimeIndex([pd.Timestamp(date)])
+    else:
+        first = pd.Period(start, "M").start_time if start else times.min().to_period("M").start_time
+        last = (pd.Period(end, "M").end_time.normalize() if end
+                else times.max().to_period("M").end_time.normalize())
+        expected = pd.date_range(first, last, freq="D")
+    return {"days_available": len(times), "days_expected": len(expected),
+            "missing_days": [str(t.date()) for t in expected.difference(times)]}
+
+
+def _map_bounds(fields, family, scale):
+    if scale == "shared":
+        values = np.concatenate([field.values.ravel() for _, _, field in fields])
+        lo, hi = np.percentile(values, [2, 98])
+        bounds = [(float(lo), float(hi))] * len(fields)
+    else:
+        bounds = [tuple(map(float, np.percentile(field.values, [2, 98])))
+                  for _, _, field in fields]
+    if family == "anomaly":
+        bounds = [(-max(abs(lo), abs(hi)) or -1.0, max(abs(lo), abs(hi)) or 1.0)
+                  for lo, hi in bounds]
+    for lo, hi in bounds:
+        if not np.isfinite([lo, hi]).all() or lo >= hi:
+            raise ValueError(f"CH4 {family} map has no finite increasing colour range")
+    return bounds
+
+
+def _check_map_overwrite(path, name, family, period, previous, current):
+    if not path.is_file():
+        return
+    prior_map = next((item for item in (previous or {}).get("maps", [])
+                      if item.get("file") == name), None)
+    same = (prior_map is not None
+            and prior_map.get("family") == family
+            and prior_map.get("period") == period
+            and previous.get("release") == current["release"]
+            and previous.get("level") == current["level"]
+            and previous.get("bbox") == current["bbox"])
+    if family == "latest":
+        same = same and previous.get("selected_months") == current["selected_months"]
+    if family in {"climatology", "anomaly"}:
+        same = (same and previous.get("baseline") == current["baseline"]
+                and previous.get("reference_years") == current["reference_years"])
+    if not same:
+        raise ValueError(f"Refusing to overwrite {path}: existing PNG has another provenance")
+
+
+def analyze(
+    cfg: dict, level: int, output: str | Path, version: str = "v25r1",
+    observations: str = "first_guess", lat: float = -23.5505, lon: float = -46.6333,
+    bbox=None, maps: bool = True, start: str | None = None, end: str | None = None,
+    date: str | None = None, map_families: list[str] | None = None,
+    baseline_start: str | None = None, baseline_end: str | None = None,
+    scale: str = "shared",
+) -> dict:
+    """Analyze verified CH4 days; maps and tables use the same selected interval."""
+    _month_bounds(start, end)
+    if date and (start or end):
+        raise ValueError("date is exclusive with start/end")
+    if date:
+        bounds = _available_day_range(cfg, version)
+        try:
+            valid_date = (bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", date))
+                          and pd.Timestamp(date).strftime("%Y-%m-%d") == date)
+        except ValueError:
+            valid_date = False
+        if not valid_date or (bounds and (not bounds[0] <= pd.Timestamp(date).date() <= bounds[1]
+                                          or date[:7] not in bounds[2])):
+            detail = f"; first_day={bounds[0]}, last_day={bounds[1]}" if bounds else ""
+            raise ValueError(f"Date {date} unavailable; expected YYYY-MM-DD{detail}")
+    if scale not in ("shared", "per-map"):
+        raise ValueError("scale must be shared or per-map")
+    families = list(map_families if map_families is not None else (["day"] if date else ["latest"]))
+    if not maps:
+        families = []
+    valid_families = {"latest", "day", "monthly", "annual", "period", "climatology",
+                      "anomaly", "std", "all"}
+    if not set(families) <= valid_families:
+        raise ValueError("Unknown CH4 map family")
+    all_requested = "all" in families
+    if all_requested:
+        families = ["day", "monthly", "annual", "period", "climatology", "anomaly", "std"]
+    if "anomaly" in families and not all_requested and not (baseline_start and baseline_end):
+        raise ValueError("anomaly maps require --baseline-start and --baseline-end")
+    if bool(baseline_start) != bool(baseline_end):
+        raise ValueError("baseline-start and baseline-end must be provided together")
+    _month_bounds(baseline_start, baseline_end)
+    month = date[:7] if date else None
+    with open_processed(cfg, version, observations, start or month, end or month) as (ds, rows):
         if level not in ds.level.values:
             raise ValueError(f"Model level {level} unavailable")
-        a = ds.ch4.sel(level=level, drop=True)
-        if bbox is not None:
-            a = subset_bbox(a, *bbox)
-            area = subset_bbox(ds.cell_area, *bbox)
-        else:
-            area = ds.cell_area
-        with dask.config.set(scheduler="synchronous"):
-            global_daily = a.weighted(area).mean(("latitude", "longitude"), keep_attrs=True).compute()
-        daily = global_daily.to_dataframe(name="ch4_ppb").reset_index()
-        provenance = {"source": SOURCE, "release": version, "input_observations": observations,
-                      "level": level, "units": "ppb dry-air mole fraction", "bbox": bbox,
+        full = ds.ch4.sel(level=level, drop=True)
+        available = pd.DatetimeIndex(full.time.values)
+        if date:
+            if pd.Timestamp(date) not in available:
+                raise ValueError(
+                    f"Date {date} unavailable; first_day={available.min().date()}, "
+                    f"last_day={available.max().date()}"
+                )
+            full = full.sel(time=[date])
+        a = subset_bbox(full, *bbox) if bbox is not None else full
+        if a.nbytes <= 64 * 1024**2:
+            with dask.config.set(scheduler="synchronous"):
+                a = a.compute()
+            if bbox is None:
+                full = a
+        area = subset_bbox(ds.cell_area, *bbox) if bbox is not None else ds.cell_area
+        months = complete_months(a)
+        years = complete_years(months)
+        seen_months = sorted(set(pd.DatetimeIndex(a.time.values).to_period("M")))
+        seen_years = sorted({p.year for p in seen_months})
+        provenance = {"source": SOURCE, "release": version,
+                      "input_observations": observations, "level": level,
+                      "units": "ppb dry-air mole fraction", "bbox": bbox,
                       "processed_sha256": [r["processed_checksum"] for r in rows]}
+        output = Path(output)
+        previous_report = (
+            json.loads((output / "analysis.json").read_text(encoding="utf-8"))
+            if (output / "analysis.json").is_file() else None
+        )
+        if families and output.is_dir() and any(output.glob("*.png")):
+            prior_baseline = (previous_report or {}).get("baseline") or {}
+            incompatible = (
+                previous_report is None
+                or previous_report.get("release") != version
+                or previous_report.get("level") != level
+                or previous_report.get("bbox") != bbox
+                or previous_report.get("selected_months") != [str(p) for p in seen_months]
+                or (any(f in families for f in ("anomaly", "climatology"))
+                    and (prior_baseline.get("start"), prior_baseline.get("end"))
+                    != (baseline_start, baseline_end))
+            )
+            if incompatible:
+                raise ValueError(
+                    "Output contains maps from another selection; choose a new directory"
+                )
+        with dask.config.set(scheduler="synchronous"):
+            daily_da = a.weighted(area).mean(("latitude", "longitude"), keep_attrs=True).compute()
+            point = extract_point(full, lat, lon).compute()
+        output.mkdir(parents=True, exist_ok=True)
+        daily = daily_da.to_dataframe(name="ch4_ppb").reset_index()
         daily.attrs = provenance
         save_table(daily, output / "area_daily.csv")
-        point = extract_point(ds.ch4.sel(level=level, drop=True), lat, lon)
         point_frame = point.to_dataframe(name="ch4_ppb").reset_index()
         point_frame.attrs = {**provenance, **point.attrs}
         save_table(point_frame, output / "point_daily.csv")
-        complete = []
-        for period in sorted(set(pd.DatetimeIndex(a.time.values).to_period("M"))):
-            part = a.sel(time=str(period))
-            if pd.DatetimeIndex(part.time.values).equals(
-                pd.date_range(period.start_time, periods=period.days_in_month, freq="D")
-            ):
-                complete.append(period)
-        monthly_rows = []
-        for period in complete:
-            values = daily.loc[pd.DatetimeIndex(daily.time).to_period("M") == period, "ch4_ppb"]
-            monthly_rows.append({"time": period.start_time, "ch4_ppb": float(values.mean()),
-                                 "days": period.days_in_month})
-        monthly = pd.DataFrame(monthly_rows, columns=["time", "ch4_ppb", "days"])
+
+        monthly = pd.DataFrame(
+            [{"time": p.start_time, "ch4_ppb": float(daily_da.sel(time=str(p)).mean()),
+              "days": p.days_in_month} for p in months],
+            columns=["time", "ch4_ppb", "days"],
+        )
         monthly.attrs = {**provenance, "aggregation": "complete calendar months only"}
         save_table(monthly, output / "area_monthly.csv")
-        map_scale = None
-        if maps:
-            latest = pd.Timestamp(a.time.values[-1])
-            reference = (
-                a.sel(time=str(complete[-1])).mean("time", keep_attrs=True)
-                if complete else a.isel(time=-1)
+        if years:
+            annual = pd.DataFrame(
+                [{"year": y, "ch4_ppb": float(daily_da.sel(time=str(y)).mean()),
+                  "days": 366 if pd.Timestamp(y, 12, 31).is_leap_year else 365} for y in years]
             )
+            annual.attrs = {**provenance, "aggregation": "complete calendar years only"}
+            save_table(annual, output / "area_annual.csv")
+
+        reference = None
+        reference_years = []
+        baseline_rows = []
+        if baseline_start and baseline_end:
+            try:
+                with open_processed(cfg, version, observations, baseline_start, baseline_end) as (
+                    baseline_ds, baseline_rows
+                ):
+                    baseline_a = baseline_ds.ch4.sel(level=level, drop=True)
+                    if bbox is not None:
+                        baseline_a = subset_bbox(baseline_a, *bbox)
+                    if baseline_a.nbytes <= 64 * 1024**2:
+                        with dask.config.set(scheduler="synchronous"):
+                            baseline_a = baseline_a.compute()
+                    reference_years = complete_years(complete_months(baseline_a))
+                    if len(reference_years) >= 2:
+                        with dask.config.set(scheduler="synchronous"):
+                            reference = reference_cycle(baseline_a, reference_years).compute()
+            except ValueError as exc:
+                if "No verified processed CH4" not in str(exc):
+                    raise
+        else:
+            reference_years = years
+            if len(years) >= 2:
+                with dask.config.set(scheduler="synchronous"):
+                    reference = reference_cycle(a, years).compute()
+        baseline_info = (
+            {"start": baseline_start, "end": baseline_end,
+             "complete_years": reference_years, "reference_years": reference_years,
+             "processed_sha256": [r["processed_checksum"] for r in baseline_rows],
+             "annual_weighting": "target calendar year's month lengths"}
+            if baseline_start and baseline_end else None
+        )
+        if reference is not None:
             with dask.config.set(scheduler="synchronous"):
-                lower, upper = np.nanpercentile(reference.compute().values, [2, 98]).tolist()
-            if lower >= upper:
-                raise ValueError("CH4 map has no usable colour range")
-            map_scale = {"lower_ppb": lower, "upper_ppb": upper,
-                         "method": "2nd and 98th percentiles of latest complete-month field"
-                         if complete else "2nd and 98th percentiles of latest daily field"}
-            plot_map(a.isel(time=-1), output / "latest_day.png",
-                     title=f"CH4 {version}, level {level}, {latest:%Y-%m-%d} (clipped scale)",
-                     vmin=lower, vmax=upper)
-            if complete:
-                period = complete[-1]
-                plot_map(reference, output / "latest_complete_month.png",
-                         title=f"CH4 {version}, level {level}, {period} (clipped scale)",
+                area_reference = (
+                    reference.weighted(area).mean(("latitude", "longitude"), keep_attrs=True)
+                    .compute()
+                )
+            cycle_frame = area_reference.to_dataframe(name="ch4_ppb").reset_index()
+            cycle_frame["n_years"] = len(reference_years)
+            cycle_frame.attrs = {**provenance, "reference_years": reference_years,
+                                 "baseline": baseline_info}
+            save_table(cycle_frame, output / "area_climatology.csv")
+            monthly_anomaly = monthly.copy()
+            monthly_anomaly["ch4_ppb"] -= monthly_anomaly["time"].dt.month.map(
+                dict(zip(cycle_frame.month, cycle_frame.ch4_ppb))
+            )
+            monthly_anomaly.attrs = cycle_frame.attrs
+            save_table(monthly_anomaly, output / "area_anomaly_monthly.csv")
+            if years:
+                annual_anomaly = annual.copy()
+                annual_anomaly["ch4_ppb"] = [
+                    float(daily_da.sel(time=str(y)).mean()) -
+                    float(_annual_reference(area_reference, y)) for y in years
+                ]
+                annual_anomaly.attrs = cycle_frame.attrs
+                save_table(annual_anomaly, output / "area_anomaly_annual.csv")
+
+        fields = {family: [] for family in families}
+        skipped = []
+        period_name = f"{seen_months[0]}_{seen_months[-1]}"
+        latest_day = pd.Timestamp(a.time.values[-1])
+        if "latest" in fields:
+            fields["latest"].append(("latest_day.png", str(latest_day.date()), a.isel(time=-1)))
+            if months:
+                fields["latest"].append(("latest_complete_month.png", str(months[-1]),
+                                         monthly_field(a, months[-1])))
+        if "day" in fields:
+            fields["day"].append((f"day_{latest_day:%Y-%m-%d}.png",
+                                  str(latest_day.date()), a.isel(time=-1)))
+        if "monthly" in fields:
+            fields["monthly"] = [(f"month_{p}.png", str(p), monthly_field(a, p)) for p in months]
+            for p in seen_months:
+                if p not in months:
+                    skipped.append({"family": "monthly", "period": str(p),
+                                    "reason": "month lacks one or more daily values"})
+        if "annual" in fields:
+            fields["annual"] = [(f"annual_{y}.png", str(y), annual_field(a, y)) for y in years]
+            for y in seen_years:
+                if y not in years:
+                    skipped.append({"family": "annual", "period": str(y),
+                                    "reason": "year lacks twelve complete months"})
+        if "period" in fields:
+            fields["period"] = [(f"period_{period_name}.png", period_name, period_field(a))]
+        if "std" in fields:
+            if a.sizes["time"] >= 2:
+                fields["std"] = [(f"std_period_{period_name}.png", period_name, std_field(a))]
+            else:
+                skipped.append({"family": "std", "period": period_name,
+                                "reason": "at least two days are required"})
+        if "climatology" in fields:
+            if reference is None:
+                skipped.append({"family": "climatology", "period": period_name,
+                                "reason": "at least two complete reference years are required"})
+            else:
+                fields["climatology"] = [
+                    (f"climatology_{m:02d}.png", f"calendar month {m:02d}",
+                     reference.sel(month=m, drop=True)) for m in range(1, 13)
+                ]
+        if "anomaly" in fields:
+            if reference is None or not (baseline_start and baseline_end):
+                skipped.append({"family": "anomaly", "period": period_name,
+                                "reason": "explicit baseline with two complete years is required"})
+            else:
+                for p in months:
+                    fields["anomaly"].append((
+                        f"anomaly_month_{p}.png", str(p),
+                        anomaly_field(monthly_field(a, p),
+                                      reference.sel(month=p.month, drop=True)),
+                    ))
+                for y in years:
+                    fields["anomaly"].append((f"anomaly_annual_{y}.png", str(y),
+                                              anomaly_field(annual_field(a, y),
+                                                            _annual_reference(reference, y))))
+                if not fields["anomaly"]:
+                    skipped.append({"family": "anomaly", "period": period_name,
+                                    "reason": "no complete target month or year"})
+
+        rendered, map_scales, map_scale = [], {}, None
+        for family, candidates in fields.items():
+            if not candidates:
+                continue
+            with dask.config.set(scheduler="synchronous"):
+                computed = [(name, period, field.compute()) for name, period, field in candidates]
+            if family == "latest":
+                reference_field = computed[-1][2]
+                lower, upper = np.percentile(reference_field.values, [2, 98])
+                if not np.isfinite([lower, upper]).all() or lower >= upper:
+                    raise ValueError("CH4 latest map has no finite increasing colour range")
+                bounds = [(float(lower), float(upper))] * len(computed)
+                map_scale = {"lower_ppb": float(lower), "upper_ppb": float(upper),
+                             "method": "2nd and 98th percentiles of latest complete-month field"
+                             if months else "2nd and 98th percentiles of latest daily field"}
+            else:
+                bounds = _map_bounds(computed, family, scale)
+            for (name, period, field), (lower, upper) in zip(computed, bounds):
+                method = "legacy latest shared" if family == "latest" else f"{scale} p2/p98"
+                title = (
+                    f"CH4 {version}, level {level}, anomaly vs "
+                    f"{baseline_start}..{baseline_end}, {period}"
+                    if family == "anomaly"
+                    else f"CH4 {version}, level {level}, {period} (clipped scale)"
+                )
+                _check_map_overwrite(
+                    output / name, name, family, period, previous_report,
+                    {"release": version, "level": level, "bbox": bbox,
+                     "selected_months": [str(p) for p in seen_months],
+                     "baseline": baseline_info, "reference_years": reference_years},
+                )
+                plot_map(field, output / name, title=title, anomaly=family == "anomaly",
                          vmin=lower, vmax=upper)
-        report = {**provenance, "first_day": str(a.time.values[0]),
-                  "last_day": str(a.time.values[-1]),
-                  "complete_months": [str(p) for p in complete],
-                  "files": [r["processed_path"] for r in rows],
-                  "interpretation": "model layer, not a station observation or surface flux",
-                  "map_color_scale": map_scale}
-        (output / "analysis.json").write_text(json.dumps(report, indent=2, default=str))
+                entry = {"file": name, "family": family, "period": period,
+                         "vmin": lower, "vmax": upper, "scale_method": method}
+                rendered.append(entry)
+                map_scales[name] = {**entry, "method": method}
+        report = {
+            **provenance, "schema_version": 2, "requested_start": start,
+            "requested_end": end, "requested_date": date,
+            "selected_months": [str(p) for p in seen_months], "selected_years": seen_years,
+            "first_day": str(a.time.values[0]), "last_day": str(a.time.values[-1]),
+            "complete_months": [str(p) for p in months], "complete_years": years,
+            "baseline": baseline_info, "maps": rendered, "skipped": skipped,
+            "reference_years": reference_years if reference is not None else [],
+            "map_scales": map_scales, "coverage": _coverage(a, start, end, date),
+            "files": [r["processed_path"] for r in rows],
+            "interpretation": "model layer, not a station observation or surface flux; "
+                              "temporal standard deviation uses ddof=0",
+            "map_color_scale": map_scale,
+        }
+        temporary = output / "analysis.json.part"
+        temporary.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+        os.replace(temporary, output / "analysis.json")
+        LOG.info("CH4 analysis: %d months, %d maps, %d skipped",
+                 len(seen_months), len(rendered), len(skipped))
         return report
 
 

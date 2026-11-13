@@ -55,3 +55,17 @@ Critérios para liberação de uma base científica: pilotos reais PASS/WARNING
 investigados; zero lacunas esperadas; checksums de originais; unidades/níveis
 comprovados; cobertura mensal consistente entre variáveis; metadados rastreáveis;
 validação externa apropriada à pergunta científica; ambiente reproduzido.
+
+## CH4, cobertura e limpeza
+
+- Uma média anual CH4 exige os 12 meses com todos os dias. A referência mensal
+  e as anomalias exigem ao menos dois anos completos; com menos cobertura, a
+  família é registrada como omitida. Não se calcula média anual parcial.
+- O desvio padrão sobre dias disponíveis é descritivo (`ddof=0`). A referência
+  empírica de dois anos não equivale automaticamente a uma normal climática de
+  30 anos. Não há tendência inferencial para CH4.
+- `camsaq clean --yes` é destrutivo e voluntário. O dry-run é padrão; `raw` e
+  `manifest` ficam fora de `all`, mas entram em `everything`. O backup do
+  manifesto protege o banco, não recria arquivos brutos ou derivados removidos.
+- Mapas usam percentis de cor para visualização; valores extremos continuam nos
+  dados. Um campo sem faixa finita crescente é recusado, evitando mapa enganoso.

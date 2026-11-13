@@ -17,6 +17,39 @@ from .storage import Manifest, sha256
 from .validation import validate_file
 
 
+def _validate_manifest_row(m, row, cfg, validator):
+    """Keep a verified processed partition usable when its original was removed."""
+    if row["status"] == "cleaned":
+        return {"key": row["key"], "status": "SKIPPED", "failures": [],
+                "warnings": ["row was cleaned"]}
+    raw = Path(row["filepath"])
+    processed = Path(row["processed_path"]) if row["processed_path"] else None
+    if (not raw.is_file() and row["status"] == "processed" and processed is not None
+            and processed.is_file() and row["processed_checksum"]
+            and sha256(processed) == row["processed_checksum"]):
+        qc = json.loads(row["qc_json"] or "{}")
+        qc.update(status="WARNING", failures=[],
+                  warnings=list(dict.fromkeys([*qc.get("warnings", []),
+                                               "raw_missing_processed_intact"])))
+        m.set(row["key"], "processed", qc_json=json.dumps(qc), error=None)
+        return {"key": row["key"], **qc}
+    batch = batch_from_row(row)
+    qc = validator(row["filepath"], batch, cfg)
+    previous = json.loads(row["qc_json"] or "{}")
+    qc.update({k: previous[k] for k in ("request_origin", "source_filename") if k in previous})
+    if qc["status"] != "FAIL" and row["checksum"] and sha256(raw) != row["checksum"]:
+        qc["status"] = "FAIL"
+        qc["failures"].append("Stored raw checksum mismatch")
+    status = "failed" if qc["status"] == "FAIL" else (
+        "processed" if row["status"] == "processed" else "validated"
+    )
+    fields = {"qc_json": json.dumps(qc), "error": "; ".join(qc["failures"]) or None}
+    if status != "failed":
+        fields.update(checksum=sha256(raw), filesize=raw.stat().st_size)
+    m.set(row["key"], status, **fields)
+    return {"key": row["key"], **qc}
+
+
 def parser():
     p = argparse.ArgumentParser(
         prog="camsaq", description="CAMS EAC4 reproducible historical archive"
@@ -80,7 +113,27 @@ def parser():
     c.add_argument("--lat", type=float, default=-23.5505)
     c.add_argument("--lon", type=float, default=-46.6333)
     c.add_argument("--bbox", nargs=4, type=float, metavar=("N", "W", "S", "E"))
-    c.add_argument("--no-maps", action="store_true")
+    c.add_argument("--start")
+    c.add_argument("--end")
+    c.add_argument("--date")
+    maps_group = c.add_mutually_exclusive_group()
+    maps_group.add_argument("--maps", help="Comma-separated CH4 map families")
+    maps_group.add_argument("--no-maps", action="store_true")
+    c.add_argument("--baseline-start")
+    c.add_argument("--baseline-end")
+    c.add_argument("--scale", choices=("shared", "per-map"), default="shared")
+    c = sub.add_parser("clean", help="Preview or remove known generated outputs")
+    c.add_argument("--scope", action="append", required=True,
+                   choices=("reports", "interim", "processed", "raw", "manifest",
+                            "zarr-stale", "tmp", "logs", "catalog", "cache", "all",
+                            "everything"))
+    c.add_argument("--product", choices=("ch4", "eac4", "all"), default="all")
+    execution = c.add_mutually_exclusive_group()
+    execution.add_argument("--dry-run", action="store_true")
+    execution.add_argument("--yes", action="store_true")
+    c.add_argument("--json", action="store_true")
+    c.add_argument("--no-manifest-backup", action="store_true")
+    c.add_argument("--force", action="store_true")
     return p
 
 
@@ -93,7 +146,8 @@ def run_ch4_command(args, cfg):
         snap = ghg.fetch_ch4_catalog(cfg)
         batches = ghg.plan_batches(cfg, snap, args.start, args.end, version)
         resources = ghg.estimate(batches, cfg["storage_copies"])
-        print(json.dumps({"estimate": resources, "requests": [b.to_dict() for b in batches]}, indent=2))
+        print(json.dumps({"estimate": resources,
+                          "requests": [b.to_dict() for b in batches]}, indent=2))
         if cmd == "plan":
             return 0
         need = resources["planning_disk_GiB"] + cfg["min_free_disk_gib"]
@@ -121,24 +175,7 @@ def run_ch4_command(args, cfg):
         return 0
     if cmd == "validate":
         m = ghg.manifest(cfg)
-        records = []
-        for row in m.rows():
-            batch = batch_from_row(row)
-            qc = ghg.validate_file(row["filepath"], batch, cfg)
-            previous = json.loads(row["qc_json"] or "{}")
-            qc.update({k: previous[k] for k in ("request_origin", "source_filename") if k in previous})
-            if qc["status"] != "FAIL" and row["checksum"] and sha256(row["filepath"]) != row["checksum"]:
-                qc["status"] = "FAIL"
-                qc["failures"].append("Stored raw checksum mismatch")
-            status = "failed" if qc["status"] == "FAIL" else (
-                "processed" if row["status"] == "processed" else "validated"
-            )
-            fields = {"qc_json": json.dumps(qc), "error": "; ".join(qc["failures"]) or None}
-            if status != "failed":
-                fields.update(checksum=sha256(row["filepath"]),
-                              filesize=Path(row["filepath"]).stat().st_size)
-            m.set(row["key"], status, **fields)
-            records.append({"key": row["key"], **qc})
+        records = [_validate_manifest_row(m, row, cfg, ghg.validate_file) for row in m.rows()]
         print(json.dumps(records, indent=2))
         return int(any(r["status"] == "FAIL" for r in records))
     if cmd == "process":
@@ -152,8 +189,12 @@ def run_ch4_command(args, cfg):
         print(ghg.consolidate(cfg, version))
         return 0
     if cmd == "analyze":
+        families = [part.strip() for part in args.maps.split(",")] if args.maps else None
         report = ghg.analyze(cfg, args.level, args.output, version, lat=args.lat, lon=args.lon,
-                             bbox=args.bbox, maps=not args.no_maps)
+                             bbox=args.bbox, maps=not args.no_maps, start=args.start, end=args.end,
+                             date=args.date, map_families=families,
+                             baseline_start=args.baseline_start,
+                             baseline_end=args.baseline_end, scale=args.scale)
         print(json.dumps(report, indent=2, default=str))
         return 0
     raise ValueError(cmd)
@@ -223,7 +264,23 @@ def download_plan(cfg, batches, max_batches=None, retry_failed=False):
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
-        cfg = load_config(args.config)
+        cfg = load_config(args.config, create_dirs=args.command != "clean")
+        if args.command == "clean":
+            from .cleanup import clean
+
+            report = clean(cfg, args.scope, args.product, execute=args.yes, force=args.force,
+                           manifest_backup=not args.no_manifest_backup)
+            if args.json:
+                print(json.dumps(report, indent=2))
+            else:
+                print(f"{report['count']} items, {report['bytes']} bytes")
+                for item in report["items"]:
+                    print(item["path"])
+                for issue in report["errors"]:
+                    print(f"ERROR: {issue}", file=sys.stderr)
+                if not args.yes:
+                    print("Dry-run: nothing was deleted.")
+            return int(bool(report["errors"]))
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s %(levelname)s %(message)s",
@@ -276,31 +333,7 @@ def main(argv=None):
                 consolidate(cfg, kind)
             return 1 if failed else 0
         if cmd == "validate":
-            records = []
-            for r in m.rows():
-                b = batch_from_row(r)
-                qc = validate_file(r["filepath"], b, cfg)
-                if (
-                    qc["status"] != "FAIL"
-                    and r["checksum"]
-                    and sha256(r["filepath"]) != r["checksum"]
-                ):
-                    qc.update(status="FAIL")
-                    qc["failures"].append("Stored checksum mismatch")
-                status = (
-                    "failed"
-                    if qc["status"] == "FAIL"
-                    else "processed"
-                    if r["status"] == "processed"
-                    else "validated"
-                )
-                fields = {"qc_json": json.dumps(qc), "error": "; ".join(qc["failures"]) or None}
-                if status != "failed":
-                    fields.update(
-                        checksum=sha256(r["filepath"]), filesize=Path(r["filepath"]).stat().st_size
-                    )
-                m.set(b.key, status, **fields)
-                records.append({"key": b.key, **qc})
+            records = [_validate_manifest_row(m, row, cfg, validate_file) for row in m.rows()]
             target = Path(cfg["metadata_dir"]) / "qc-report.json"
             target.write_text(json.dumps(records, indent=2))
             print(f"{len(records)} files inspected: {target}")

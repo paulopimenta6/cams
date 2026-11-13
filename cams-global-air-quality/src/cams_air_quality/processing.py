@@ -56,6 +56,8 @@ def process_batch(cfg, batch):
             and output.exists()
             and sha256(output) == row["processed_checksum"]
         ):
+            if row["status"] != "processed":
+                manifest.set(batch.key, "processed", processing_error=None)
             return output
         with open_raw(
             batch.filepath,
